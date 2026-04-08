@@ -26,7 +26,8 @@ export default function PhaseIntro({
     <div
       className="anim-enter"
       style={{
-        minHeight: '100dvh',
+        flex: 1,
+        minHeight: 0,
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
@@ -34,10 +35,10 @@ export default function PhaseIntro({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: spacing.lg,
+        paddingTop: spacing.md,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
-        paddingBottom: spacing.xl + 8,
+        paddingBottom: spacing.lg,
         textAlign: 'center',
       }}
     >
@@ -61,7 +62,7 @@ export default function PhaseIntro({
           fontSize: fontSizes.h1,
           fontWeight: fontWeights.black,
           margin: 0,
-          marginBottom: spacing.lg,
+          marginBottom: spacing.md,
           letterSpacing: '-0.02em',
           lineHeight: 1.1,
           maxWidth: 360,
@@ -78,8 +79,8 @@ export default function PhaseIntro({
             color: colors.textSecondary,
             maxWidth: 360,
             margin: 0,
-            marginBottom: spacing.xxl,
-            lineHeight: 1.45,
+            marginBottom: spacing.xl,
+            lineHeight: 1.4,
             fontWeight: fontWeights.semibold,
           }}
         >

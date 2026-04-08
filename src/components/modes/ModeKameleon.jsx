@@ -103,7 +103,8 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -246,7 +247,8 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -340,7 +342,8 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -512,7 +515,8 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,

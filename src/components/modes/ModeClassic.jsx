@@ -125,7 +125,8 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -219,7 +220,8 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -389,7 +391,8 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
       <div
         className="anim-enter"
         style={{
-          minHeight: 'calc(100dvh - 96px)',
+          flex: 1,
+          minHeight: 0,
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,

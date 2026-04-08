@@ -133,7 +133,14 @@ export default function App() {
     const mode = getMode(game.modeId)
     const ModeComp = mode?.Component || ModeStub
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bg }}>
+      <div
+        style={{
+          height: '100dvh',
+          background: colors.bg,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <ScoreboardHeader
           players={players}
           scores={game.scores}
@@ -142,15 +149,25 @@ export default function App() {
           modeId={game.modeId}
           onQuit={quitToMenu}
         />
-        <ModeComp
-          key={`${game.modeId}-${game.currentRound}`}
-          players={players}
-          settings={settings}
-          roundIndex={game.currentRound}
-          isLastRound={isLastRound}
-          onRoundComplete={finishRound}
-          onQuit={quitToMenu}
-        />
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto',
+          }}
+        >
+          <ModeComp
+            key={`${game.modeId}-${game.currentRound}`}
+            players={players}
+            settings={settings}
+            roundIndex={game.currentRound}
+            isLastRound={isLastRound}
+            onRoundComplete={finishRound}
+            onQuit={quitToMenu}
+          />
+        </div>
       </div>
     )
   }
