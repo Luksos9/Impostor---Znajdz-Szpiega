@@ -1,5 +1,14 @@
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForRole } from '../styles/theme'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  colorForRole,
+} from '../styles/theme'
 import { L } from '../utils/labels'
+import Button from './ui/Button'
+import Card from './ui/Card'
 
 // Round reveal: shows who was the impostor, delta points per player, narrative line.
 // Single "Następna runda" button advances. Last round: button says "Wyniki" instead.
@@ -11,21 +20,29 @@ import { L } from '../utils/labels'
 //   narrative:   string                    Polish one-liner ("Impostor uciekł" etc.)
 //   isLastRound: boolean
 //   onNext:      () => void
-export default function RoundResult({ impostorIds, players, deltas, narrative, isLastRound, onNext }) {
+export default function RoundResult({
+  impostorIds,
+  players,
+  deltas,
+  narrative,
+  isLastRound,
+  onNext,
+}) {
   const impostors = players.filter((p) => impostorIds.includes(p.id))
-  const others = players.filter((p) => !impostorIds.includes(p.id))
+  const impostorColor = colorForRole('impostor')
 
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: spacing.xl,
-        paddingBottom: spacing.lg,
+        paddingBottom: spacing.xl + 8,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
       }}
@@ -33,10 +50,10 @@ export default function RoundResult({ impostorIds, players, deltas, narrative, i
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          color: colors.textMuted,
+          letterSpacing: '0.14em',
+          color: impostorColor,
           marginBottom: spacing.md,
         }}
       >
@@ -52,20 +69,24 @@ export default function RoundResult({ impostorIds, players, deltas, narrative, i
         }}
       >
         {impostors.map((p) => (
-          <div
+          <Card
             key={p.id}
+            elevation="strong"
+            padded="none"
+            border="none"
+            accent={impostorColor}
             style={{
-              background: colors.surface,
-              border: `2px solid ${colorForRole('impostor')}`,
-              borderRadius: radii.lg,
-              padding: `${spacing.md}px ${spacing.lg}px`,
-              fontSize: fontSizes.h2,
+              border: `3px solid ${impostorColor}`,
+              padding: `${spacing.lg}px ${spacing.lg}px`,
+              fontSize: fontSizes.h1,
               fontWeight: fontWeights.black,
-              letterSpacing: '-0.01em',
+              letterSpacing: '-0.02em',
+              color: colors.textPrimary,
+              lineHeight: 1.05,
             }}
           >
             {p.name}
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -76,6 +97,7 @@ export default function RoundResult({ impostorIds, players, deltas, narrative, i
             color: colors.textSecondary,
             marginBottom: spacing.xl,
             lineHeight: 1.4,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {narrative}
@@ -85,9 +107,9 @@ export default function RoundResult({ impostorIds, players, deltas, narrative, i
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
+          letterSpacing: '0.14em',
           color: colors.textMuted,
           marginBottom: spacing.sm,
         }}
@@ -103,69 +125,65 @@ export default function RoundResult({ impostorIds, players, deltas, narrative, i
           marginBottom: spacing.xl,
         }}
       >
-        {players.map((p) => {
+        {players.map((p, idx) => {
           const delta = deltas[p.id] || 0
           const isImp = impostorIds.includes(p.id)
           const deltaColor =
-            delta > 0 ? colors.scoreGreen : delta < 0 ? colors.scoreRed : colors.textMuted
+            delta > 0
+              ? colors.success
+              : delta < 0
+                ? colors.danger
+                : colors.textMuted
           return (
-            <div
+            <Card
               key={p.id}
+              elevation="soft"
+              padded="md"
+              accent={isImp ? impostorColor : null}
+              className="anim-pop"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: colors.surface,
-                border: `1px solid ${isImp ? colorForRole('impostor') : colors.border}`,
-                borderRadius: radii.md,
-                padding: `${spacing.md}px ${spacing.lg}px`,
+                animationDelay: `${idx * 80}ms`,
               }}
             >
               <div
                 style={{
                   fontSize: fontSizes.bodyLg,
-                  fontWeight: fontWeights.semibold,
+                  fontWeight: fontWeights.extraBold,
+                  color: colors.textPrimary,
                 }}
               >
                 {p.name}
               </div>
               <div
                 style={{
-                  fontSize: fontSizes.bodyLg,
+                  fontSize: fontSizes.h3,
                   fontWeight: fontWeights.black,
                   color: deltaColor,
+                  letterSpacing: '-0.01em',
                 }}
               >
                 {delta > 0 ? `+${delta}` : delta}
               </div>
-            </div>
+            </Card>
           )
         })}
       </div>
 
       <div style={{ flex: 1 }} />
 
-      <button
+      <Button
+        variant="primary"
+        size="hero"
+        accentColor={colors.textPrimary}
+        textColor={colors.bg}
+        fullWidth
         onClick={onNext}
-        style={{
-          background: colors.textPrimary,
-          border: 'none',
-          borderRadius: radii.xl,
-          color: colors.bg,
-          fontSize: fontSizes.h3,
-          fontWeight: fontWeights.black,
-          padding: `${spacing.lg}px 0`,
-          cursor: 'pointer',
-          transition: 'transform 0.08s ease',
-        }}
-        onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.01)' }}
-        onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
       >
         {isLastRound ? L.result.finalResults : L.result.next}
-      </button>
-
-      {/* Reference to prevent unused-var lint warnings if others is empty. */}
-      <div style={{ display: 'none' }}>{others.length}</div>
+      </Button>
     </div>
   )
 }

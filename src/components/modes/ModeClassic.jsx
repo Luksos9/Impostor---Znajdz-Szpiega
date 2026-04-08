@@ -1,10 +1,20 @@
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
 import VoteGrid from '../VoteGrid'
 import RoundResult from '../RoundResult'
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForMode } from '../../styles/theme'
+import Button from '../ui/Button'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  radii,
+  colorForMode,
+  colorForModeShadow,
+} from '../../styles/theme'
 import { pickImpostor } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
@@ -51,7 +61,12 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   const [votes, setVotes] = useState({})
   const [guessText, setGuessText] = useState('')
 
+  const reactId = useId()
+  const safeId = reactId.replace(/:/g, '')
+  const guessInputClass = `guess-input-${safeId}`
+
   const accent = colorForMode(MODE_ID)
+  const accentShadow = colorForModeShadow(MODE_ID)
   const currentRevealPlayer = players.find((p) => p.id === speakerOrder[revealIdx])
   const currentSpeaker = players.find((p) => p.id === speakerOrder[speakerIdx])
   const currentVoter = players.find((p) => p.id === speakerOrder[voteIdx])
@@ -98,6 +113,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
         description={t(L.classic.describeIntroDesc, { name: firstSpeaker.name })}
         buttonText={L.classic.describeIntroCta}
         accent={accent}
+        shadowColor={accentShadow}
         onContinue={() => setPhase('describe')}
       />
     )
@@ -107,8 +123,9 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   if (phase === 'describe') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -116,17 +133,20 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.lg,
+          paddingTop: spacing.lg,
+          paddingLeft: spacing.lg,
+          paddingRight: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           textAlign: 'center',
         }}
       >
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            color: colors.textMuted,
+            letterSpacing: '0.14em',
+            color: accent,
             marginBottom: spacing.md,
           }}
         >
@@ -138,6 +158,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
             fontSize: fontSizes.bodyLg,
             color: colors.textSecondary,
             marginBottom: spacing.md,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {L.classic.nowSpeaking}
@@ -151,6 +172,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
             marginBottom: spacing.lg,
             letterSpacing: '-0.02em',
             lineHeight: 1.05,
+            color: colors.textPrimary,
           }}
         >
           {currentSpeaker.name}
@@ -164,12 +186,17 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
             marginBottom: spacing.xxl,
             maxWidth: 320,
             lineHeight: 1.4,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {L.classic.describeHint}
         </p>
 
-        <button
+        <Button
+          variant="primary"
+          size="lg"
+          accentColor={accent}
+          shadowColor={accentShadow}
           onClick={() => {
             const nextSpeakerIdx = speakerIdx + 1
             if (nextSpeakerIdx >= players.length) {
@@ -178,23 +205,10 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
               setSpeakerIdx(nextSpeakerIdx)
             }
           }}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            paddingTop: spacing.lg,
-            paddingBottom: spacing.lg,
-            paddingLeft: spacing.xxl,
-            paddingRight: spacing.xxl,
-            cursor: 'pointer',
-            minWidth: 240,
-          }}
+          style={{ minWidth: 240 }}
         >
           {speakerIdx === players.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -203,15 +217,16 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   if (phase === 'decision') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
@@ -219,10 +234,10 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            color: colors.textMuted,
+            letterSpacing: '0.14em',
+            color: accent,
             marginBottom: spacing.sm,
           }}
         >
@@ -231,11 +246,12 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
 
         <h2
           style={{
-            fontSize: fontSizes.h2,
+            fontSize: fontSizes.h1,
             fontWeight: fontWeights.black,
             margin: 0,
             marginBottom: spacing.xs,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            color: colors.textPrimary,
           }}
         >
           {L.classic.whatNext}
@@ -247,104 +263,55 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
             color: colors.textSecondary,
             margin: 0,
             marginBottom: spacing.xl,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {L.classic.whatNextHint}
         </p>
 
-        <button
-          onClick={() => {
-            setVoteIdx(0)
-            setVotes({})
-            setPhase('vote-handoff')
-          }}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.md,
-            paddingLeft: spacing.md,
-            paddingRight: spacing.md,
-            cursor: 'pointer',
-            marginBottom: spacing.md,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <span>{L.classic.callVote}</span>
-          <span
-            style={{
-              fontSize: fontSizes.bodySm,
-              fontWeight: fontWeights.semibold,
-              opacity: 0.7,
-            }}
-          >
-            {L.classic.callVoteHint}
-          </span>
-        </button>
-
-        {turn < MAX_TURNS && (
-          <button
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <Button
+            variant="primary"
+            size="lg"
+            accentColor={accent}
+            shadowColor={accentShadow}
+            fullWidth
             onClick={() => {
-              setTurn(turn + 1)
-              setSpeakerIdx(0)
-              setPhase('describe')
-            }}
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.borderStrong}`,
-              borderRadius: radii.xl,
-              color: colors.textPrimary,
-              fontSize: fontSizes.body,
-              fontWeight: fontWeights.bold,
-              paddingTop: spacing.md,
-              paddingBottom: spacing.md,
-              paddingLeft: spacing.md,
-              paddingRight: spacing.md,
-              cursor: 'pointer',
-              marginBottom: spacing.md,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
+              setVoteIdx(0)
+              setVotes({})
+              setPhase('vote-handoff')
             }}
           >
-            <span>{L.classic.nextTurn}</span>
-            <span
-              style={{
-                fontSize: fontSizes.bodySm,
-                fontWeight: fontWeights.regular,
-                color: colors.textMuted,
+            {L.classic.callVote}
+          </Button>
+
+          {turn < MAX_TURNS && (
+            <Button
+              variant="secondary"
+              size="lg"
+              accentColor={accent}
+              fullWidth
+              onClick={() => {
+                setTurn(turn + 1)
+                setSpeakerIdx(0)
+                setPhase('describe')
               }}
             >
-              {L.classic.nextTurnHint}
-            </span>
-          </button>
-        )}
+              {L.classic.nextTurn}
+            </Button>
+          )}
+        </div>
 
         <div style={{ flex: 1 }} />
 
-        <button
+        <Button
+          variant="dashed"
+          size="md"
+          fullWidth
           onClick={() => setPhase('guess-handoff')}
-          style={{
-            background: 'transparent',
-            border: `1px dashed ${colors.border}`,
-            borderRadius: radii.lg,
-            color: colors.textMuted,
-            fontSize: fontSizes.bodySm,
-            fontWeight: fontWeights.semibold,
-            padding: `${spacing.sm}px 0`,
-            cursor: 'pointer',
-          }}
         >
           {L.classic.iAmImpostor}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -365,6 +332,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
         players={players}
         voterId={currentVoter.id}
         voterName={currentVoter.name}
+        accent={accent}
         onVote={(targetId) => {
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
@@ -392,27 +360,55 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   }
 
   if (phase === 'guess-entry') {
+    const guessCss = `
+      .${guessInputClass} {
+        background: ${colors.surface};
+        border: 2px solid ${colors.borderStrong};
+        border-radius: ${radii.lg}px;
+        color: ${colors.textPrimary};
+        font-family: ${fonts.sans};
+        font-size: ${fontSizes.h2}px;
+        font-weight: ${fontWeights.black};
+        padding: ${spacing.md}px;
+        text-align: center;
+        outline: none;
+        width: 100%;
+        transition: border-color 120ms ease, box-shadow 120ms ease;
+        letterSpacing: -0.01em;
+      }
+      .${guessInputClass}:focus {
+        border-color: ${accent};
+        box-shadow: 0 0 0 3px ${accent}22;
+      }
+      .${guessInputClass}::placeholder {
+        color: ${colors.textMuted};
+        font-weight: ${fontWeights.bold};
+      }
+    `
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
       >
+        <style>{guessCss}</style>
+
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             color: accent,
             marginBottom: spacing.sm,
           }}
@@ -421,11 +417,12 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
         </div>
         <h2
           style={{
-            fontSize: fontSizes.h2,
+            fontSize: fontSizes.h1,
             fontWeight: fontWeights.black,
             margin: 0,
             marginBottom: spacing.lg,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            color: colors.textPrimary,
           }}
         >
           Zgaduję słowo
@@ -433,43 +430,27 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
 
         <input
           type="text"
+          className={guessInputClass}
           value={guessText}
           onChange={(e) => setGuessText(e.target.value)}
           placeholder={L.classic.guessPlaceholder}
           autoFocus
-          style={{
-            background: colors.surface,
-            border: `1px solid ${colors.border}`,
-            borderRadius: radii.lg,
-            color: colors.textPrimary,
-            fontFamily: fonts.sans,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.bold,
-            padding: spacing.md,
-            marginBottom: spacing.xl,
-            outline: 'none',
-            textAlign: 'center',
-          }}
+          style={{ marginBottom: spacing.xl }}
         />
 
         <div style={{ flex: 1 }} />
 
-        <button
-          onClick={() => setPhase('result')}
+        <Button
+          variant="primary"
+          size="hero"
+          accentColor={accent}
+          shadowColor={accentShadow}
+          fullWidth
           disabled={!guessText.trim()}
-          style={{
-            background: guessText.trim() ? accent : colors.surface,
-            border: `2px solid ${guessText.trim() ? accent : colors.border}`,
-            borderRadius: radii.xl,
-            color: guessText.trim() ? colors.bg : colors.textDim,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            padding: `${spacing.lg}px 0`,
-            cursor: guessText.trim() ? 'pointer' : 'not-allowed',
-          }}
+          onClick={() => setPhase('result')}
         >
           {L.classic.submitGuess}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -515,7 +496,16 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
       deltas = awardImpostorWordGuess(deltas, impostorIds, 3)
       narrative = `${L.result.wordGuessCorrect} · ${content.word}`
     } else {
-      deltas = awardCorrectVoters(deltas, Object.fromEntries(players.filter((p) => !impostorIds.includes(p.id)).map((p) => [p.id, impostorIds[0]])), impostorIds, 1)
+      deltas = awardCorrectVoters(
+        deltas,
+        Object.fromEntries(
+          players
+            .filter((p) => !impostorIds.includes(p.id))
+            .map((p) => [p.id, impostorIds[0]])
+        ),
+        impostorIds,
+        1
+      )
       narrative = `${L.result.wordGuessWrong} · ${content.word}`
     }
     return (

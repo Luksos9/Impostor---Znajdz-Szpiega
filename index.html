@@ -1,27 +1,121 @@
 <!doctype html>
-<html lang="pl">
+<html lang="pl" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content="#FFF8EC" />
     <title>Impostor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
+      /* ─── Theme tokens as CSS variables ───
+         Components import { colors } from styles/theme.js, where each value is
+         a var(--…) string. Switching theme = swapping data-theme on <html>. */
+      :root,
+      :root[data-theme="light"] {
+        --color-bg:           #FFF8EC;
+        --color-bg-subtle:    #FFF3DD;
+        --color-surface:      #FFFFFF;
+        --color-surface-raised:#FFFFFF;
+        --color-surface-subtle:#FFF3DD;
+
+        --color-border:       #E5E0D2;
+        --color-border-strong:#D4CEBE;
+
+        --color-text-primary: #2B2B2B;
+        --color-text-secondary:#6B6258;
+        --color-text-muted:   #A39C8E;
+        --color-text-dim:     #C9C2B3;
+
+        --color-overlay:      rgba(43, 43, 43, 0.55);
+
+        --shadow-soft:        rgba(43, 43, 43, 0.06);
+        --shadow-medium:      rgba(43, 43, 43, 0.10);
+        --shadow-strong:      rgba(43, 43, 43, 0.18);
+        --shadow-tactile-neutral: #C9C2B3;
+
+        --illustration-bg:    #FFF8EC;
+
+        color-scheme: light;
+      }
+
+      :root[data-theme="dark"] {
+        --color-bg:           #181412;
+        --color-bg-subtle:    #1F1A17;
+        --color-surface:      #262220;
+        --color-surface-raised:#2E2926;
+        --color-surface-subtle:#1F1A17;
+
+        --color-border:       #3A3531;
+        --color-border-strong:#4D4844;
+
+        --color-text-primary: #F5F0E5;
+        --color-text-secondary:#B8B0A2;
+        --color-text-muted:   #8A8278;
+        --color-text-dim:     #5C5650;
+
+        --color-overlay:      rgba(0, 0, 0, 0.7);
+
+        --shadow-soft:        rgba(0, 0, 0, 0.35);
+        --shadow-medium:      rgba(0, 0, 0, 0.45);
+        --shadow-strong:      rgba(0, 0, 0, 0.6);
+        --shadow-tactile-neutral: #0E0B09;
+
+        --illustration-bg:    #FFF8EC;
+
+        color-scheme: dark;
+      }
+
       html, body, #root {
         margin: 0;
         padding: 0;
-        height: 100%;
-        background: #0a0a0a;
-        color: #f5f5f5;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        min-height: 100%;
+        background-color: var(--color-bg);
+        color: var(--color-text-primary);
+        font-family: 'Nunito', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior-y: none;
+        transition: background-color 220ms ease, color 220ms ease;
       }
       * { box-sizing: border-box; }
-      button { font-family: inherit; cursor: pointer; }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
       input, textarea { font-family: inherit; }
+
+      .anim-enter {
+        animation: fadeSlideUp 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .anim-pop {
+        animation: pop 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .anim-bob {
+        animation: bob 2800ms ease-in-out infinite;
+      }
+
+      @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pop {
+        0%   { opacity: 0; transform: scale(0.6); }
+        60%  { opacity: 1; transform: scale(1.12); }
+        100% { transform: scale(1); }
+      }
+      @keyframes bob {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-4px); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .anim-enter, .anim-pop, .anim-bob { animation: none !important; }
+        html, body, #root { transition: none !important; }
+      }
     </style>
   </head>
   <body>

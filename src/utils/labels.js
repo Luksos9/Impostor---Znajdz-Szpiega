@@ -20,6 +20,12 @@ export const L = {
     start: 'Graj',
     back: 'Wstecz',
     minPlayers: 'Minimum {n} graczy dla tego trybu',
+    namesLabel: 'Imiona graczy',
+    namesHint: 'Wylosowaliśmy śmieszne imiona — możesz je zmienić',
+    editNames: 'Zmień imiona',
+    doneEditing: 'Gotowe',
+    shuffleNames: 'Wylosuj nowe',
+    namePlaceholder: 'Imię gracza',
   },
 
   privacy: {

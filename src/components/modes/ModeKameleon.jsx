@@ -4,7 +4,19 @@ import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
 import VoteGrid from '../VoteGrid'
 import RoundResult from '../RoundResult'
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForMode } from '../../styles/theme'
+import Button from '../ui/Button'
+import Card from '../ui/Card'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  radii,
+  shadows,
+  colorForMode,
+  colorForModeShadow,
+} from '../../styles/theme'
 import { pickImpostor } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
@@ -46,6 +58,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   const secret = secretRef.current
   const order = orderRef.current
   const accent = colorForMode(MODE_ID)
+  const accentShadow = colorForModeShadow(MODE_ID)
 
   const [phase, setPhase] = useState('grid-intro')
   const [revealIdx, setRevealIdx] = useState(0)
@@ -59,20 +72,45 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   const currentSpeaker = players.find((p) => p.id === order[speakerIdx])
   const currentVoter = players.find((p) => p.id === order[voteIdx])
 
+  // Hardcoded font size 13 stays — Polish words like "Rowerzysta" wrap badly at larger sizes.
+  const gridCellStyle = {
+    background: colors.surface,
+    border: `1.5px solid ${colors.border}`,
+    borderRadius: radii.md,
+    boxShadow: shadows.soft,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    paddingLeft: spacing.xs,
+    paddingRight: spacing.xs,
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: fontWeights.extraBold,
+    color: colors.textPrimary,
+    minHeight: 56,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    wordBreak: 'break-word',
+    lineHeight: 1.15,
+    overflow: 'hidden',
+    fontFamily: fonts.sans,
+  }
+
   // Grid intro: public screen showing the 4x4 word grid plus the topic banner.
   // Everyone sees this before the private secret reveal.
   if (phase === 'grid-intro') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
@@ -80,26 +118,36 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             color: accent,
             marginBottom: spacing.sm,
           }}
         >
           {L.kameleon.topic}
         </div>
-        <h2
-          style={{
-            fontSize: fontSizes.h2,
-            fontWeight: fontWeights.black,
-            margin: 0,
-            marginBottom: spacing.sm,
-            letterSpacing: '-0.01em',
-          }}
+
+        <Card
+          elevation="medium"
+          padded="lg"
+          accent={accent}
+          style={{ marginBottom: spacing.md }}
         >
-          {content.topic}
-        </h2>
+          <h2
+            style={{
+              fontSize: fontSizes.h1,
+              fontWeight: fontWeights.black,
+              margin: 0,
+              letterSpacing: '-0.02em',
+              color: colors.textPrimary,
+              lineHeight: 1.05,
+            }}
+          >
+            {content.topic}
+          </h2>
+        </Card>
+
         <p
           style={{
             fontSize: fontSizes.body,
@@ -107,6 +155,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             margin: 0,
             marginBottom: spacing.lg,
             lineHeight: 1.4,
+            fontWeight: fontWeights.semibold,
           }}
         >
           Ta siatka jest publiczna. Jedno z tych słów jest tajne. Kameleon go nie zna.
@@ -121,28 +170,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
           }}
         >
           {content.words.map((w, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radii.md,
-                paddingTop: spacing.sm,
-                paddingBottom: spacing.sm,
-                paddingLeft: spacing.xs,
-                paddingRight: spacing.xs,
-                textAlign: 'center',
-                fontSize: 13,
-                fontWeight: fontWeights.bold,
-                minHeight: 56,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                wordBreak: 'break-word',
-                lineHeight: 1.15,
-                overflow: 'hidden',
-              }}
-            >
+            <div key={idx} style={gridCellStyle}>
               {w}
             </div>
           ))}
@@ -150,21 +178,16 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
 
         <div style={{ flex: 1 }} />
 
-        <button
+        <Button
+          variant="primary"
+          size="hero"
+          accentColor={accent}
+          shadowColor={accentShadow}
+          fullWidth
           onClick={() => setPhase('reveal-handoff')}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            padding: `${spacing.lg}px 0`,
-            cursor: 'pointer',
-          }}
         >
           Wszyscy widzą siatkę
-        </button>
+        </Button>
       </div>
     )
   }
@@ -211,6 +234,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         description={t(L.phaseIntro.kameleonDescribeDesc, { name: firstSpeaker.name })}
         buttonText={L.classic.describeIntroCta}
         accent={accent}
+        shadowColor={accentShadow}
         onContinue={() => setPhase('describe')}
       />
     )
@@ -220,8 +244,9 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   if (phase === 'describe') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
@@ -229,17 +254,20 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.lg,
+          paddingTop: spacing.lg,
+          paddingLeft: spacing.lg,
+          paddingRight: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           textAlign: 'center',
         }}
       >
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            color: colors.textMuted,
+            letterSpacing: '0.14em',
+            color: accent,
             marginBottom: spacing.md,
           }}
         >
@@ -251,6 +279,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             fontSize: fontSizes.bodyLg,
             color: colors.textSecondary,
             marginBottom: spacing.md,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {L.classic.nowSpeaking}
@@ -264,6 +293,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             marginBottom: spacing.lg,
             letterSpacing: '-0.02em',
             lineHeight: 1.05,
+            color: colors.textPrimary,
           }}
         >
           {currentSpeaker.name}
@@ -277,12 +307,17 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             marginBottom: spacing.xxl,
             maxWidth: 320,
             lineHeight: 1.4,
+            fontWeight: fontWeights.semibold,
           }}
         >
           Powiedz JEDNO słowo pasujące do tajnego słowa
         </p>
 
-        <button
+        <Button
+          variant="primary"
+          size="lg"
+          accentColor={accent}
+          shadowColor={accentShadow}
           onClick={() => {
             const nextSpeakerIdx = speakerIdx + 1
             if (nextSpeakerIdx >= players.length) {
@@ -291,23 +326,10 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
               setSpeakerIdx(nextSpeakerIdx)
             }
           }}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            paddingTop: spacing.lg,
-            paddingBottom: spacing.lg,
-            paddingLeft: spacing.xxl,
-            paddingRight: spacing.xxl,
-            cursor: 'pointer',
-            minWidth: 240,
-          }}
+          style={{ minWidth: 240 }}
         >
           {speakerIdx === players.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -316,15 +338,16 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   if (phase === 'decision') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
@@ -332,10 +355,10 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            color: colors.textMuted,
+            letterSpacing: '0.14em',
+            color: accent,
             marginBottom: spacing.sm,
           }}
         >
@@ -344,11 +367,12 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
 
         <h2
           style={{
-            fontSize: fontSizes.h2,
+            fontSize: fontSizes.h1,
             fontWeight: fontWeights.black,
             margin: 0,
             marginBottom: spacing.xs,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            color: colors.textPrimary,
           }}
         >
           {L.classic.whatNext}
@@ -360,104 +384,55 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             color: colors.textSecondary,
             margin: 0,
             marginBottom: spacing.xl,
+            fontWeight: fontWeights.semibold,
           }}
         >
           {L.classic.whatNextHint}
         </p>
 
-        <button
-          onClick={() => {
-            setVoteIdx(0)
-            setVotes({})
-            setPhase('vote-handoff')
-          }}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.md,
-            paddingLeft: spacing.md,
-            paddingRight: spacing.md,
-            cursor: 'pointer',
-            marginBottom: spacing.md,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <span>{L.classic.callVote}</span>
-          <span
-            style={{
-              fontSize: fontSizes.bodySm,
-              fontWeight: fontWeights.semibold,
-              opacity: 0.7,
-            }}
-          >
-            {L.classic.callVoteHint}
-          </span>
-        </button>
-
-        {turn < MAX_TURNS && (
-          <button
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <Button
+            variant="primary"
+            size="lg"
+            accentColor={accent}
+            shadowColor={accentShadow}
+            fullWidth
             onClick={() => {
-              setTurn(turn + 1)
-              setSpeakerIdx(0)
-              setPhase('describe')
-            }}
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.borderStrong}`,
-              borderRadius: radii.xl,
-              color: colors.textPrimary,
-              fontSize: fontSizes.body,
-              fontWeight: fontWeights.bold,
-              paddingTop: spacing.md,
-              paddingBottom: spacing.md,
-              paddingLeft: spacing.md,
-              paddingRight: spacing.md,
-              cursor: 'pointer',
-              marginBottom: spacing.md,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
+              setVoteIdx(0)
+              setVotes({})
+              setPhase('vote-handoff')
             }}
           >
-            <span>{L.classic.nextTurn}</span>
-            <span
-              style={{
-                fontSize: fontSizes.bodySm,
-                fontWeight: fontWeights.regular,
-                color: colors.textMuted,
+            {L.classic.callVote}
+          </Button>
+
+          {turn < MAX_TURNS && (
+            <Button
+              variant="secondary"
+              size="lg"
+              accentColor={accent}
+              fullWidth
+              onClick={() => {
+                setTurn(turn + 1)
+                setSpeakerIdx(0)
+                setPhase('describe')
               }}
             >
-              {L.classic.nextTurnHint}
-            </span>
-          </button>
-        )}
+              {L.classic.nextTurn}
+            </Button>
+          )}
+        </div>
 
         <div style={{ flex: 1 }} />
 
-        <button
+        <Button
+          variant="dashed"
+          size="md"
+          fullWidth
           onClick={() => setPhase('guess-grid')}
-          style={{
-            background: 'transparent',
-            border: `1px dashed ${colors.border}`,
-            borderRadius: radii.lg,
-            color: colors.textMuted,
-            fontSize: fontSizes.bodySm,
-            fontWeight: fontWeights.semibold,
-            padding: `${spacing.sm}px 0`,
-            cursor: 'pointer',
-          }}
         >
           {L.kameleon.iAmChameleon}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -478,6 +453,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         players={players}
         voterId={currentVoter.id}
         voterName={currentVoter.name}
+        accent={accent}
         onVote={(targetId) => {
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
@@ -493,29 +469,69 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
     )
   }
 
-  // Chameleon picks a word from the public grid.
+  // Chameleon picks a word from the public grid. Cells are pressable buttons here.
   if (phase === 'guess-grid') {
+    const guessCellClassName = 'kameleon-guess-cell'
+    const guessCellCss = `
+      .${guessCellClassName} {
+        background: ${colors.surface};
+        border: 2px solid ${colors.borderStrong};
+        border-radius: ${radii.md}px;
+        box-shadow: ${shadows.tactile};
+        padding: ${spacing.sm}px ${spacing.xs}px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: ${fontWeights.black};
+        color: ${colors.textPrimary};
+        font-family: ${fonts.sans};
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        word-break: break-word;
+        line-height: 1.15;
+        overflow: hidden;
+        cursor: pointer;
+        transform: translateY(0);
+        transition: transform 90ms ease, box-shadow 90ms ease, border-color 120ms ease;
+      }
+      .${guessCellClassName}:hover:not(:disabled) {
+        border-color: ${accent};
+      }
+      .${guessCellClassName}:active:not(:disabled) {
+        transform: translateY(4px);
+        box-shadow: 0 0 0 transparent;
+      }
+      .${guessCellClassName}:focus-visible {
+        outline: none;
+        border-color: ${accent};
+        box-shadow: ${shadows.tactile}, 0 0 0 3px ${accent}33;
+      }
+    `
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
       >
+        <style>{guessCellCss}</style>
+
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             color: accent,
             marginBottom: spacing.sm,
           }}
@@ -524,11 +540,12 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         </div>
         <h2
           style={{
-            fontSize: fontSizes.h2,
+            fontSize: fontSizes.h1,
             fontWeight: fontWeights.black,
             margin: 0,
             marginBottom: spacing.lg,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
+            color: colors.textPrimary,
           }}
         >
           {L.kameleon.tapToGuess}
@@ -545,26 +562,11 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
           {content.words.map((w, idx) => (
             <button
               key={idx}
+              type="button"
+              className={guessCellClassName}
               onClick={() => {
                 setGuessedWord(w)
                 setPhase('result')
-              }}
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radii.md,
-                paddingTop: spacing.sm,
-                paddingBottom: spacing.sm,
-                paddingLeft: spacing.xs,
-                paddingRight: spacing.xs,
-                textAlign: 'center',
-                fontSize: 13,
-                fontWeight: fontWeights.bold,
-                color: colors.textPrimary,
-                minHeight: 64,
-                cursor: 'pointer',
-                wordBreak: 'break-word',
-                lineHeight: 1.15,
               }}
             >
               {w}

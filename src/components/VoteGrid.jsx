@@ -1,23 +1,27 @@
-import { colors, fonts, fontSizes, fontWeights, spacing, radii } from '../styles/theme'
+import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
+import Button from './ui/Button'
 
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote and calls onVote(targetId).
-// Parent component wraps this in a PrivacyHandoff loop so each voter votes privately.
-export default function VoteGrid({ players, voterId, voterName, onVote }) {
+// Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
+export default function VoteGrid({ players, voterId, voterName, onVote, accent }) {
   const candidates = players.filter((p) => p.id !== voterId)
+  // 1-col on tight screens (≤4 candidates) so labels never truncate, 2-col otherwise.
+  const cols = candidates.length <= 4 ? '1fr' : '1fr 1fr'
 
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: spacing.xl,
-        paddingBottom: spacing.lg,
+        paddingBottom: spacing.xl + 8,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
       }}
@@ -25,10 +29,10 @@ export default function VoteGrid({ players, voterId, voterName, onVote }) {
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          color: colors.textMuted,
+          letterSpacing: '0.14em',
+          color: accent || colors.textMuted,
           marginBottom: spacing.sm,
         }}
       >
@@ -41,7 +45,8 @@ export default function VoteGrid({ players, voterId, voterName, onVote }) {
           fontWeight: fontWeights.black,
           margin: 0,
           marginBottom: spacing.sm,
-          letterSpacing: '-0.01em',
+          letterSpacing: '-0.02em',
+          color: colors.textPrimary,
         }}
       >
         {L.vote.title}
@@ -53,6 +58,7 @@ export default function VoteGrid({ players, voterId, voterName, onVote }) {
           color: colors.textSecondary,
           margin: 0,
           marginBottom: spacing.xl,
+          fontWeight: fontWeights.semibold,
         }}
       >
         {L.vote.instruction}
@@ -61,38 +67,21 @@ export default function VoteGrid({ players, voterId, voterName, onVote }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: candidates.length <= 4 ? '1fr' : '1fr 1fr',
+          gridTemplateColumns: cols,
           gap: spacing.md,
         }}
       >
         {candidates.map((p) => (
-          <button
+          <Button
             key={p.id}
+            variant="secondary"
+            size="lg"
+            accentColor={accent || colors.textPrimary}
+            fullWidth
             onClick={() => onVote(p.id)}
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: radii.lg,
-              color: colors.textPrimary,
-              fontSize: fontSizes.h3,
-              fontWeight: fontWeights.bold,
-              padding: `${spacing.xl}px ${spacing.md}px`,
-              cursor: 'pointer',
-              textAlign: 'center',
-              transition: 'transform 0.08s ease, border-color 0.12s ease',
-              minHeight: 80,
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'scale(1.01)'
-              e.currentTarget.style.borderColor = colors.borderStrong
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.borderColor = colors.border
-            }}
           >
             {p.name}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

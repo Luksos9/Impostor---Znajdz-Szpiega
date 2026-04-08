@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Menu from './components/Menu'
 import QuickSetup from './components/QuickSetup'
 import ScoreboardHeader from './components/ScoreboardHeader'
@@ -7,6 +7,7 @@ import ModeStub from './components/modes/ModeStub'
 import { getMode } from './data/modes'
 import { getSettings, saveSettings } from './utils/storage'
 import { applyDeltas } from './utils/scoring'
+import { colors } from './styles/theme'
 
 // Top-level state machine.
 // Screens: 'menu' → 'setup' → 'playing' → 'gameover'
@@ -18,6 +19,23 @@ export default function App() {
   const [players, setPlayers] = useState([])
   const [settings, setSettings] = useState(() => getSettings())
   const [game, setGame] = useState(null)
+
+  // Apply the persisted theme on mount and whenever it changes.
+  // Theme tokens are CSS variables keyed off [data-theme] on <html>.
+  useEffect(() => {
+    const mode = settings.themeMode === 'dark' ? 'dark' : 'light'
+    document.documentElement.dataset.theme = mode
+    // Keep the iOS status bar / browser chrome in sync with the new bg.
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+  }, [settings.themeMode])
+
+  const toggleTheme = () => {
+    const next = settings.themeMode === 'dark' ? 'light' : 'dark'
+    const nextSettings = { ...settings, themeMode: next }
+    setSettings(nextSettings)
+    saveSettings({ themeMode: next })
+  }
 
   const selectMode = (id) => {
     setSelectedModeId(id)
@@ -90,7 +108,13 @@ export default function App() {
   }
 
   if (screen === 'menu') {
-    return <Menu onPickMode={selectMode} />
+    return (
+      <Menu
+        onPickMode={selectMode}
+        themeMode={settings.themeMode}
+        onToggleTheme={toggleTheme}
+      />
+    )
   }
 
   if (screen === 'setup') {
@@ -109,12 +133,13 @@ export default function App() {
     const mode = getMode(game.modeId)
     const ModeComp = mode?.Component || ModeStub
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bg }}>
         <ScoreboardHeader
           players={players}
           scores={game.scores}
           currentRound={game.currentRound}
           totalRounds={game.totalRounds}
+          modeId={game.modeId}
           onQuit={quitToMenu}
         />
         <ModeComp

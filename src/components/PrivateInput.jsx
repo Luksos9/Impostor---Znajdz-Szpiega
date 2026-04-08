@@ -1,8 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForMode } from '../styles/theme'
+import { useEffect, useId, useRef, useState } from 'react'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  radii,
+  colorForMode,
+  colorForModeShadow,
+} from '../styles/theme'
+import Button from './ui/Button'
 
 // Pass-and-play textarea. Used by Kto ma inne pytanie? for private answers.
-// Clears its internal state whenever `playerId` changes so the previous answer
+// Clears its internal state whenever `playerName` changes so the previous answer
 // never leaks to the next player.
 //
 // Props:
@@ -12,9 +22,19 @@ import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForMode } f
 //   modeId:       string            for accent color
 //   maxLength:    number            default 80
 //   onSubmit:     (text) => void
-export default function PrivateInput({ playerName, prompt, placeholder, modeId, maxLength = 80, onSubmit }) {
+export default function PrivateInput({
+  playerName,
+  prompt,
+  placeholder,
+  modeId,
+  maxLength = 80,
+  onSubmit,
+}) {
   const [text, setText] = useState('')
   const inputRef = useRef(null)
+  const reactId = useId()
+  const safeId = reactId.replace(/:/g, '')
+  const taClass = `private-input-${safeId}`
 
   // Reset when the player changes so we don't leak the previous answer.
   useEffect(() => {
@@ -26,28 +46,59 @@ export default function PrivateInput({ playerName, prompt, placeholder, modeId, 
 
   const canSubmit = text.trim().length > 0
   const accent = colorForMode(modeId)
+  const accentShadow = colorForModeShadow(modeId)
+
+  // Inline scoped CSS for the textarea focus border (impossible via inline style).
+  const taCss = `
+    .${taClass} {
+      background: ${colors.surface};
+      border: 2px solid ${colors.borderStrong};
+      border-radius: ${radii.lg}px;
+      color: ${colors.textPrimary};
+      font-family: ${fonts.sans};
+      font-size: ${fontSizes.bodyLg}px;
+      font-weight: ${fontWeights.semibold};
+      padding: ${spacing.md}px;
+      resize: none;
+      width: 100%;
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+      line-height: 1.4;
+    }
+    .${taClass}:focus {
+      border-color: ${accent};
+      box-shadow: 0 0 0 3px ${accent}22;
+    }
+    .${taClass}::placeholder {
+      color: ${colors.textMuted};
+      font-weight: ${fontWeights.semibold};
+    }
+  `
 
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: spacing.xl,
-        paddingBottom: spacing.lg,
+        paddingBottom: spacing.xl + 8,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
       }}
     >
+      <style>{taCss}</style>
+
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
+          letterSpacing: '0.14em',
           color: accent,
           marginBottom: spacing.sm,
         }}
@@ -57,11 +108,13 @@ export default function PrivateInput({ playerName, prompt, placeholder, modeId, 
 
       <h2
         style={{
-          fontSize: fontSizes.h3,
-          fontWeight: fontWeights.bold,
+          fontSize: fontSizes.h2,
+          fontWeight: fontWeights.black,
           margin: 0,
           marginBottom: spacing.lg,
-          lineHeight: 1.25,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.15,
+          color: colors.textPrimary,
         }}
       >
         {prompt}
@@ -69,23 +122,12 @@ export default function PrivateInput({ playerName, prompt, placeholder, modeId, 
 
       <textarea
         ref={inputRef}
+        className={taClass}
         value={text}
         onChange={(e) => setText(e.target.value.slice(0, maxLength))}
         placeholder={placeholder}
         rows={4}
-        style={{
-          background: colors.surface,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radii.lg,
-          color: colors.textPrimary,
-          fontFamily: fonts.sans,
-          fontSize: fontSizes.bodyLg,
-          padding: spacing.md,
-          resize: 'none',
-          marginBottom: spacing.sm,
-          width: '100%',
-          outline: 'none',
-        }}
+        style={{ marginBottom: spacing.sm }}
       />
 
       <div
@@ -94,6 +136,7 @@ export default function PrivateInput({ playerName, prompt, placeholder, modeId, 
           color: colors.textMuted,
           alignSelf: 'flex-end',
           marginBottom: spacing.xl,
+          fontWeight: fontWeights.bold,
         }}
       >
         {text.length} / {maxLength}
@@ -101,23 +144,17 @@ export default function PrivateInput({ playerName, prompt, placeholder, modeId, 
 
       <div style={{ flex: 1 }} />
 
-      <button
-        onClick={() => canSubmit && onSubmit(text.trim())}
+      <Button
+        variant="primary"
+        size="lg"
+        accentColor={accent}
+        shadowColor={accentShadow}
+        fullWidth
         disabled={!canSubmit}
-        style={{
-          background: canSubmit ? accent : colors.surface,
-          border: `2px solid ${canSubmit ? accent : colors.border}`,
-          borderRadius: radii.xl,
-          color: canSubmit ? colors.bg : colors.textDim,
-          fontSize: fontSizes.h3,
-          fontWeight: fontWeights.black,
-          padding: `${spacing.lg}px 0`,
-          cursor: canSubmit ? 'pointer' : 'not-allowed',
-          transition: 'transform 0.08s ease',
-        }}
+        onClick={() => canSubmit && onSubmit(text.trim())}
       >
         Zapisz i oddaj telefon
-      </button>
+      </Button>
     </div>
   )
 }

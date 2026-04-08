@@ -5,7 +5,17 @@ import PhaseIntro from '../PhaseIntro'
 import PrivateInput from '../PrivateInput'
 import VoteGrid from '../VoteGrid'
 import RoundResult from '../RoundResult'
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForMode } from '../../styles/theme'
+import Button from '../ui/Button'
+import Card from '../ui/Card'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  colorForMode,
+  colorForModeShadow,
+} from '../../styles/theme'
 import { pickImpostor } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
@@ -49,6 +59,7 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
   const [votes, setVotes] = useState({})
 
   const accent = colorForMode(MODE_ID)
+  const accentShadow = colorForModeShadow(MODE_ID)
   const currentRevealPlayer = players.find((p) => p.id === order[revealIdx])
   const currentWriter = players.find((p) => p.id === order[writeIdx])
   const currentVoter = players.find((p) => p.id === order[voteIdx])
@@ -95,6 +106,7 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
         description={L.phaseIntro.writeIntroDesc}
         buttonText={L.phaseIntro.writeIntroCta}
         accent={accent}
+        shadowColor={accentShadow}
         onContinue={() => setPhase('write-handoff')}
       />
     )
@@ -137,15 +149,16 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
   if (phase === 'reveal-grid') {
     return (
       <div
+        className="anim-enter"
         style={{
-          minHeight: 'calc(100vh - 96px)',
+          minHeight: 'calc(100dvh - 96px)',
           background: colors.bg,
           color: colors.textPrimary,
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: spacing.xl,
-          paddingBottom: spacing.lg,
+          paddingBottom: spacing.xl + 8,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
         }}
@@ -153,9 +166,9 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.bold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             color: accent,
             marginBottom: spacing.sm,
           }}
@@ -163,33 +176,31 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
           {L.pairsQuestion.commonQuestionLabel}
         </div>
 
-        <div
-          style={{
-            background: colors.surface,
-            border: `2px solid ${accent}`,
-            borderRadius: radii.lg,
-            padding: spacing.lg,
-            marginBottom: spacing.xl,
-          }}
+        <Card
+          elevation="medium"
+          padded="lg"
+          accent={accent}
+          style={{ marginBottom: spacing.xl }}
         >
           <div
             style={{
               fontSize: fontSizes.h3,
-              fontWeight: fontWeights.bold,
-              lineHeight: 1.3,
+              fontWeight: fontWeights.black,
+              lineHeight: 1.25,
               letterSpacing: '-0.01em',
+              color: colors.textPrimary,
             }}
           >
             {content.common}
           </div>
-        </div>
+        </Card>
 
         <div
           style={{
             fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.semibold,
+            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.14em',
             color: colors.textMuted,
             marginBottom: spacing.sm,
           }}
@@ -205,23 +216,23 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
             marginBottom: spacing.xl,
           }}
         >
-          {players.map((p) => (
-            <div
+          {players.map((p, idx) => (
+            <Card
               key={p.id}
+              elevation="soft"
+              padded="md"
+              className="anim-pop"
               style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radii.md,
-                padding: spacing.md,
+                animationDelay: `${idx * 80}ms`,
               }}
             >
               <div
                 style={{
                   fontSize: fontSizes.bodySm,
                   color: colors.textMuted,
-                  fontWeight: fontWeights.semibold,
+                  fontWeight: fontWeights.extraBold,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
                   marginBottom: spacing.xs,
                 }}
               >
@@ -230,37 +241,33 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
               <div
                 style={{
                   fontSize: fontSizes.bodyLg,
-                  fontWeight: fontWeights.semibold,
+                  fontWeight: fontWeights.extraBold,
                   lineHeight: 1.3,
+                  color: colors.textPrimary,
                 }}
               >
                 {answers[p.id] || '—'}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <button
+        <Button
+          variant="primary"
+          size="hero"
+          accentColor={accent}
+          shadowColor={accentShadow}
+          fullWidth
           onClick={() => {
             setVoteIdx(0)
             setVotes({})
             setPhase('vote-handoff')
           }}
-          style={{
-            background: accent,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            padding: `${spacing.lg}px 0`,
-            cursor: 'pointer',
-          }}
         >
           {L.classic.callVote}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -281,6 +288,7 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
         players={players}
         voterId={currentVoter.id}
         voterName={currentVoter.name}
+        accent={accent}
         onVote={(targetId) => {
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)

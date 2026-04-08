@@ -1,17 +1,28 @@
 import { useState } from 'react'
-import { colors, fonts, fontSizes, fontWeights, spacing, radii, colorForRole } from '../styles/theme'
+import {
+  colors,
+  fonts,
+  fontSizes,
+  fontWeights,
+  spacing,
+  radii,
+  shadows,
+  colorForRole,
+} from '../styles/theme'
 import { L } from '../utils/labels'
+import Card from './ui/Card'
+import Button from './ui/Button'
 
 // Secret card reveal with two-tap hide confirmation.
 // First tap on "Już pamiętam" hides the secret and shows "Schowane, tap to pass".
 // Second tap advances to whatever's next (usually next player or next phase).
 //
 // Props:
-//   role:    'civilian' | 'impostor'       controls the accent and the "You are ..." label
+//   role:    'civilian' | 'impostor'       controls the role color + label
 //   label:   'Twoje słowo' etc.            label shown above the main secret
 //   secret:  'PIZZA' or 'Jesteś impostorem' the actual secret content
 //   hint:    optional subline (category for Klasyczny, hint for impostor)
-//   accent:  hex color                      mode accent used for the border
+//   accent:  hex color                      mode accent used for the secondary CTA
 //   onHide:  called after the second tap
 export default function CardReveal({ role, label, secret, hint, accent, onHide }) {
   const [hidden, setHidden] = useState(false)
@@ -22,8 +33,9 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
 
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
@@ -31,7 +43,10 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing.lg,
+        paddingTop: spacing.lg,
+        paddingLeft: spacing.lg,
+        paddingRight: spacing.lg,
+        paddingBottom: spacing.xl + 8,
       }}
     >
       {!hidden ? (
@@ -39,21 +54,26 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
           <div
             style={{
               fontSize: fontSizes.eyebrow,
-              fontWeight: fontWeights.bold,
+              fontWeight: fontWeights.extraBold,
               textTransform: 'uppercase',
-              letterSpacing: '0.12em',
+              letterSpacing: '0.14em',
               color: roleColor,
               marginBottom: spacing.md,
             }}
           >
-            {role === 'impostor' ? (secret === L.card.youAreChameleon ? 'Kameleon' : 'Impostor') : label}
+            {role === 'impostor'
+              ? secret === L.card.youAreChameleon
+                ? 'Kameleon'
+                : 'Impostor'
+              : label}
           </div>
 
-          <div
+          <Card
+            elevation="strong"
+            padded="none"
+            border="none"
             style={{
-              background: colors.surface,
-              border: `3px solid ${accent || roleColor}`,
-              borderRadius: radii.xl,
+              border: `4px solid ${roleColor}`,
               padding: `${spacing.xxl}px ${spacing.lg}px`,
               marginBottom: spacing.xl,
               minWidth: 280,
@@ -63,12 +83,13 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
           >
             <div
               style={{
-                fontSize: role === 'impostor' ? fontSizes.h1 : fontSizes.h1,
+                fontSize: fontSizes.h1,
                 fontWeight: fontWeights.black,
                 letterSpacing: '-0.01em',
                 lineHeight: 1.1,
                 marginBottom: hint ? spacing.md : 0,
                 wordBreak: 'break-word',
+                color: colors.textPrimary,
               }}
             >
               {secret}
@@ -79,50 +100,39 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
                   fontSize: fontSizes.body,
                   color: colors.textSecondary,
                   marginTop: spacing.sm,
+                  fontWeight: fontWeights.semibold,
                 }}
               >
                 {hint}
               </div>
             )}
-          </div>
+          </Card>
 
-          <button
+          <Button
+            variant="secondary"
+            size="lg"
+            accentColor={accent || roleColor}
             onClick={handleFirstTap}
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.borderStrong}`,
-              borderRadius: radii.lg,
-              color: colors.textPrimary,
-              fontSize: fontSizes.body,
-              fontWeight: fontWeights.bold,
-              padding: `${spacing.md}px ${spacing.xl}px`,
-              cursor: 'pointer',
-              minWidth: 240,
-            }}
+            style={{ minWidth: 240 }}
           >
             {L.card.rememberIt}
-          </button>
+          </Button>
         </>
       ) : (
-        <button
+        <Button
+          variant="dashed"
+          size="lg"
+          fullWidth
           onClick={handleSecondTap}
           style={{
-            background: 'transparent',
-            border: `2px dashed ${colors.border}`,
-            borderRadius: radii.xl,
-            color: colors.textMuted,
-            fontSize: fontSizes.bodyLg,
-            fontWeight: fontWeights.bold,
-            padding: `${spacing.xxl}px ${spacing.xl}px`,
-            cursor: 'pointer',
-            minWidth: 320,
-            maxWidth: 420,
-            textAlign: 'center',
+            maxWidth: 360,
+            minHeight: 140,
+            padding: spacing.xl,
             lineHeight: 1.4,
           }}
         >
           {L.card.hiddenConfirm}
-        </button>
+        </Button>
       )}
     </div>
   )

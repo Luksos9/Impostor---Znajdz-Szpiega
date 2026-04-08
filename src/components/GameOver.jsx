@@ -1,8 +1,10 @@
-import { colors, fonts, fontSizes, fontWeights, spacing, radii } from '../styles/theme'
+import { colors, fonts, fontSizes, fontWeights, spacing, tactileShadow } from '../styles/theme'
 import { L } from '../utils/labels'
+import Button from './ui/Button'
+import Card from './ui/Card'
 
 // Final standings after the last round.
-// Players sorted by score descending. Winners get a highlighted row.
+// Players sorted by score descending. Winners get a celebrated success row.
 export default function GameOver({ players, scores, onRestart, onMenu }) {
   const sorted = [...players].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
   const topScore = sorted.length > 0 ? scores[sorted[0].id] || 0 : 0
@@ -10,15 +12,16 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
 
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: spacing.xl,
-        paddingBottom: spacing.lg,
+        paddingBottom: spacing.xl + 8,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
       }}
@@ -26,9 +29,9 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
+          letterSpacing: '0.14em',
           color: colors.textMuted,
           marginBottom: spacing.sm,
         }}
@@ -41,13 +44,15 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
           fontSize: fontSizes.h1,
           fontWeight: fontWeights.black,
           margin: 0,
-          marginBottom: spacing.md,
+          marginBottom: spacing.lg,
           letterSpacing: '-0.02em',
+          color: colors.textPrimary,
         }}
       >
         {winners.length === 1 ? L.gameOver.winner : L.gameOver.winners}
       </h2>
 
+      {/* Winner card(s) — celebrated treatment with success border + tactile success shadow */}
       <div
         style={{
           display: 'flex',
@@ -56,33 +61,55 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
           marginBottom: spacing.xl,
         }}
       >
-        {winners.map((p) => (
-          <div
+        {winners.map((p, idx) => (
+          <Card
             key={p.id}
+            elevation="strong"
+            padded="none"
+            border="none"
+            className="anim-pop"
             style={{
-              background: colors.surface,
-              border: `2px solid ${colors.scoreGreen}`,
-              borderRadius: radii.lg,
-              padding: `${spacing.md}px ${spacing.lg}px`,
-              fontSize: fontSizes.h2,
-              fontWeight: fontWeights.black,
+              border: `4px solid ${colors.success}`,
+              boxShadow: `${tactileShadow(colors.successShadow)}, 0 18px 40px var(--shadow-strong)`,
+              padding: `${spacing.lg}px ${spacing.lg}px`,
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'baseline',
+              justifyContent: 'space-between',
+              animationDelay: `${idx * 100}ms`,
             }}
           >
-            <span>{p.name}</span>
-            <span style={{ color: colors.scoreGreen }}>{scores[p.id] || 0}</span>
-          </div>
+            <span
+              style={{
+                fontSize: fontSizes.h1,
+                fontWeight: fontWeights.black,
+                letterSpacing: '-0.02em',
+                color: colors.textPrimary,
+                lineHeight: 1.05,
+              }}
+            >
+              {p.name}
+            </span>
+            <span
+              style={{
+                fontSize: fontSizes.h1,
+                fontWeight: fontWeights.black,
+                color: colors.success,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.05,
+              }}
+            >
+              {scores[p.id] || 0}
+            </span>
+          </Card>
         ))}
       </div>
 
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.semibold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
+          letterSpacing: '0.14em',
           color: colors.textMuted,
           marginBottom: spacing.sm,
         }}
@@ -90,17 +117,18 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
         Wynik końcowy
       </div>
 
+      {/* Full ranking — borderless rows on cream with 1px bottom dividers */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: spacing.sm,
           marginBottom: spacing.xl,
         }}
       >
         {sorted.map((p, idx) => {
           const score = scores[p.id] || 0
           const isWinner = winners.some((w) => w.id === p.id)
+          const isLast = idx === sorted.length - 1
           return (
             <div
               key={p.id}
@@ -108,17 +136,17 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
                 display: 'flex',
                 alignItems: 'baseline',
                 justifyContent: 'space-between',
-                padding: `${spacing.sm}px ${spacing.md}px`,
-                borderBottom: `1px solid ${colors.border}`,
-                opacity: isWinner ? 1 : 0.85,
+                padding: `${spacing.md}px ${spacing.sm}px`,
+                borderBottom: isLast ? 'none' : `1px solid ${colors.border}`,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'baseline', gap: spacing.md }}>
                 <span
                   style={{
-                    fontSize: fontSizes.bodySm,
+                    fontSize: fontSizes.body,
                     color: colors.textMuted,
-                    minWidth: 18,
+                    fontWeight: fontWeights.extraBold,
+                    minWidth: 24,
                   }}
                 >
                   {idx + 1}.
@@ -126,7 +154,8 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
                 <span
                   style={{
                     fontSize: fontSizes.bodyLg,
-                    fontWeight: isWinner ? fontWeights.bold : fontWeights.semibold,
+                    fontWeight: isWinner ? fontWeights.black : fontWeights.extraBold,
+                    color: colors.textPrimary,
                   }}
                 >
                   {p.name}
@@ -135,8 +164,8 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
               <span
                 style={{
                   fontSize: fontSizes.bodyLg,
-                  fontWeight: fontWeights.bold,
-                  color: isWinner ? colors.scoreGreen : colors.textPrimary,
+                  fontWeight: fontWeights.black,
+                  color: isWinner ? colors.success : colors.textPrimary,
                 }}
               >
                 {score}
@@ -148,37 +177,20 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
 
       <div style={{ flex: 1 }} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-        <button
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+        <Button
+          variant="primary"
+          size="hero"
+          accentColor={colors.success}
+          shadowColor={colors.successShadow}
+          fullWidth
           onClick={onRestart}
-          style={{
-            background: colors.textPrimary,
-            border: 'none',
-            borderRadius: radii.xl,
-            color: colors.bg,
-            fontSize: fontSizes.h3,
-            fontWeight: fontWeights.black,
-            padding: `${spacing.lg}px 0`,
-            cursor: 'pointer',
-          }}
         >
           {L.gameOver.playAgain}
-        </button>
-        <button
-          onClick={onMenu}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${colors.border}`,
-            borderRadius: radii.xl,
-            color: colors.textPrimary,
-            fontSize: fontSizes.body,
-            fontWeight: fontWeights.bold,
-            padding: `${spacing.md}px 0`,
-            cursor: 'pointer',
-          }}
-        >
+        </Button>
+        <Button variant="ghost" size="md" fullWidth onClick={onMenu}>
           {L.gameOver.backToMenu}
-        </button>
+        </Button>
       </div>
     </div>
   )

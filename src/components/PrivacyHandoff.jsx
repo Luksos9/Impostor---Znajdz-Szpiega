@@ -1,14 +1,17 @@
-import { colors, fonts, fontSizes, fontWeights, spacing, radii } from '../styles/theme'
+import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
+import Button from './ui/Button'
 
 // Full-screen blocker between private reveals.
 // Shown before every CardReveal and before every private vote.
-// Two-line copy: name of next player + physical "flip and pass" cue.
+// Mode-agnostic by design — neutral surface, no accent color, just the
+// player's name in display size and the "flip and pass" physical cue.
 export default function PrivacyHandoff({ playerName, onReady }) {
   return (
     <div
+      className="anim-enter"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
@@ -16,16 +19,19 @@ export default function PrivacyHandoff({ playerName, onReady }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing.lg,
+        paddingTop: spacing.lg,
+        paddingLeft: spacing.lg,
+        paddingRight: spacing.lg,
+        paddingBottom: spacing.xl + 8,
         textAlign: 'center',
       }}
     >
       <div
         style={{
           fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.bold,
+          fontWeight: fontWeights.extraBold,
           textTransform: 'uppercase',
-          letterSpacing: '0.12em',
+          letterSpacing: '0.14em',
           color: colors.textMuted,
           marginBottom: spacing.md,
         }}
@@ -41,6 +47,7 @@ export default function PrivacyHandoff({ playerName, onReady }) {
           marginBottom: spacing.lg,
           letterSpacing: '-0.02em',
           lineHeight: 1.05,
+          color: colors.textPrimary,
         }}
       >
         {playerName}
@@ -54,30 +61,22 @@ export default function PrivacyHandoff({ playerName, onReady }) {
           margin: 0,
           marginBottom: spacing.xxl,
           lineHeight: 1.4,
+          fontWeight: fontWeights.semibold,
         }}
       >
         {L.privacy.flipAndPass}
       </p>
 
-      <button
+      <Button
+        variant="primary"
+        size="lg"
+        accentColor={colors.textPrimary}
+        textColor={colors.bg}
         onClick={onReady}
-        style={{
-          background: colors.textPrimary,
-          border: 'none',
-          borderRadius: radii.xl,
-          color: colors.bg,
-          fontSize: fontSizes.bodyLg,
-          fontWeight: fontWeights.bold,
-          padding: `${spacing.lg}px ${spacing.xxl}px`,
-          cursor: 'pointer',
-          minWidth: 240,
-          transition: 'transform 0.08s ease',
-        }}
-        onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.02)' }}
-        onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
+        style={{ minWidth: 240 }}
       >
         {L.privacy.iAmReady}
-      </button>
+      </Button>
     </div>
   )
 }
