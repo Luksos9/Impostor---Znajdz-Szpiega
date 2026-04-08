@@ -24,6 +24,8 @@ import Card from './ui/Card'
 // QuickSetup: three taps from app open to first round.
 // User picks player count + round count, optionally edits names, taps Graj.
 // Roster starts as funny Polish nicknames; user can edit or re-shuffle.
+// Layout: scrollable middle (title → count → names → rounds) with a pinned
+// Graj footer so the CTA is always visible even when the name list grows.
 export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
   const mode = getMode(modeId)
   const accent = colorForMode(modeId)
@@ -33,7 +35,6 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
   const [rounds, setRounds] = useState(initialRounds || 5)
   // Roster lives in state so user edits survive count changes via resizeRoster.
   const [roster, setRoster] = useState(() => autoGeneratePlayers(Math.max(mode?.minPlayers || 3, 5)))
-  const [isEditingNames, setIsEditingNames] = useState(false)
 
   // If the user picks a count below the mode's minimum, bump it up.
   useEffect(() => {
@@ -65,105 +66,112 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
     <div
       className="anim-enter"
       style={{
-        minHeight: '100dvh',
+        height: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: spacing.xl,
-        paddingBottom: spacing.xl + 8, // breathing room for the tactile Graj shadow
-        paddingLeft: spacing.lg,
-        paddingRight: spacing.lg,
       }}
     >
-      {/* Back link — ghost, mode-agnostic */}
-      <div style={{ marginBottom: spacing.lg, alignSelf: 'flex-start' }}>
-        <Button variant="ghost" size="sm" onClick={onBack} ariaLabel={L.buttons.back}>
-          ← {L.buttons.back}
-        </Button>
-      </div>
-
+      {/* Scrollable middle — everything except the pinned Graj footer. */}
       <div
         style={{
-          fontSize: fontSizes.eyebrow,
-          fontWeight: fontWeights.extraBold,
-          textTransform: 'uppercase',
-          letterSpacing: '0.14em',
-          color: accent,
-          marginBottom: spacing.sm,
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          paddingTop: spacing.lg,
+          paddingLeft: spacing.lg,
+          paddingRight: spacing.lg,
+          paddingBottom: spacing.md,
         }}
       >
-        {mode?.label}
-      </div>
-
-      <h2
-        style={{
-          fontSize: fontSizes.h1,
-          fontWeight: fontWeights.black,
-          margin: 0,
-          marginBottom: spacing.xl,
-          letterSpacing: '-0.02em',
-          color: colors.textPrimary,
-        }}
-      >
-        {L.quickSetup.title}
-      </h2>
-
-      {/* ─── Player count picker ─── */}
-      <SectionLabel>{L.quickSetup.playerCount}</SectionLabel>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: spacing.sm,
-          marginBottom: spacing.md,
-        }}
-      >
-        {countOptions.map((count) => {
-          const disabled = count < (mode?.minPlayers || 3)
-          const active = playerCount === count
-          return (
-            <CountCell
-              key={count}
-              label={count}
-              active={active}
-              disabled={disabled}
-              accent={accent}
-              accentShadow={accentShadow}
-              onClick={() => !disabled && setPlayerCount(count)}
-            />
-          )
-        })}
-      </div>
-
-      {!meetsMin && mode && (
-        <div
-          style={{
-            fontSize: fontSizes.bodySm,
-            color: colors.danger,
-            marginBottom: spacing.md,
-            fontWeight: fontWeights.bold,
-          }}
-        >
-          {t(L.quickSetup.minPlayers, { n: mode.minPlayers })}
+        {/* Back link — ghost, mode-agnostic */}
+        <div style={{ marginBottom: spacing.md, alignSelf: 'flex-start' }}>
+          <Button variant="ghost" size="sm" onClick={onBack} ariaLabel={L.buttons.back}>
+            ← {L.buttons.back}
+          </Button>
         </div>
-      )}
 
-      {/* ─── Player roster (funny names + edit) ─── */}
-      <div style={{ marginTop: spacing.md, marginBottom: spacing.lg }}>
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            fontSize: fontSizes.eyebrow,
+            fontWeight: fontWeights.extraBold,
+            textTransform: 'uppercase',
+            letterSpacing: '0.14em',
+            color: accent,
             marginBottom: spacing.sm,
-            gap: spacing.sm,
           }}
         >
-          <SectionLabel inline>{L.quickSetup.namesLabel}</SectionLabel>
-          <div style={{ display: 'flex', gap: spacing.xs }}>
+          {mode?.label}
+        </div>
+
+        <h2
+          style={{
+            fontSize: fontSizes.h1,
+            fontWeight: fontWeights.black,
+            margin: 0,
+            marginBottom: spacing.lg,
+            letterSpacing: '-0.02em',
+            color: colors.textPrimary,
+          }}
+        >
+          {L.quickSetup.title}
+        </h2>
+
+        {/* ─── Player count picker ─── */}
+        <SectionLabel>{L.quickSetup.playerCount}</SectionLabel>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, 1fr)',
+            gap: spacing.sm,
+            marginBottom: spacing.md,
+          }}
+        >
+          {countOptions.map((count) => {
+            const disabled = count < (mode?.minPlayers || 3)
+            const active = playerCount === count
+            return (
+              <CountCell
+                key={count}
+                label={count}
+                active={active}
+                disabled={disabled}
+                accent={accent}
+                accentShadow={accentShadow}
+                onClick={() => !disabled && setPlayerCount(count)}
+              />
+            )
+          })}
+        </div>
+
+        {!meetsMin && mode && (
+          <div
+            style={{
+              fontSize: fontSizes.bodySm,
+              color: colors.danger,
+              marginBottom: spacing.md,
+              fontWeight: fontWeights.bold,
+            }}
+          >
+            {t(L.quickSetup.minPlayers, { n: mode.minPlayers })}
+          </div>
+        )}
+
+        {/* ─── Player roster (always editable, numbered rows) ─── */}
+        <div style={{ marginTop: spacing.sm, marginBottom: spacing.md }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: spacing.sm,
+              gap: spacing.sm,
+            }}
+          >
+            <SectionLabel inline>{L.quickSetup.namesLabel}</SectionLabel>
             <Button
               variant="ghost"
               size="sm"
@@ -172,34 +180,10 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
             >
               ⟳ {L.quickSetup.shuffleNames}
             </Button>
-            <Button
-              variant={isEditingNames ? 'primary' : 'secondary'}
-              size="sm"
-              accentColor={accent}
-              shadowColor={accentShadow}
-              onClick={() => setIsEditingNames((v) => !v)}
-            >
-              {isEditingNames ? L.quickSetup.doneEditing : L.quickSetup.editNames}
-            </Button>
           </div>
-        </div>
 
-        {!isEditingNames && (
-          <div
-            style={{
-              fontSize: fontSizes.bodySm,
-              color: colors.textMuted,
-              marginBottom: spacing.sm,
-              fontWeight: fontWeights.semibold,
-            }}
-          >
-            {L.quickSetup.namesHint}
-          </div>
-        )}
-
-        <Card padded="md" elevation="soft">
-          {isEditingNames ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+          <Card padded="sm" elevation="soft">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
               {roster.map((p, idx) => (
                 <NameInput
                   key={p.id}
@@ -210,94 +194,91 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
                 />
               ))}
             </div>
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: spacing.sm,
-              }}
-            >
-              {roster.map((p) => (
-                <NameChip key={p.id} name={p.name} accent={accent} />
-              ))}
-            </div>
-          )}
-        </Card>
+          </Card>
+        </div>
+
+        {/* ─── Round count stepper ─── */}
+        <SectionLabel>{L.quickSetup.roundCount}</SectionLabel>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing.lg,
+          }}
+        >
+          <Button
+            variant="secondary"
+            size="md"
+            accentColor={accent}
+            onClick={() => setRounds(Math.max(3, rounds - 1))}
+            disabled={rounds <= 3}
+            ariaLabel="−"
+            style={{
+              width: 56,
+              paddingLeft: 0,
+              paddingRight: 0,
+              fontSize: fontSizes.h2,
+            }}
+          >
+            −
+          </Button>
+          <div
+            style={{
+              fontSize: fontSizes.h1,
+              fontWeight: fontWeights.black,
+              minWidth: 80,
+              textAlign: 'center',
+              color: colors.textPrimary,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {rounds}
+          </div>
+          <Button
+            variant="secondary"
+            size="md"
+            accentColor={accent}
+            onClick={() => setRounds(Math.min(10, rounds + 1))}
+            disabled={rounds >= 10}
+            ariaLabel="+"
+            style={{
+              width: 56,
+              paddingLeft: 0,
+              paddingRight: 0,
+              fontSize: fontSizes.h2,
+            }}
+          >
+            +
+          </Button>
+        </div>
       </div>
 
-      {/* ─── Round count stepper ─── */}
-      <SectionLabel>{L.quickSetup.roundCount}</SectionLabel>
-
+      {/* ─── Pinned Graj footer — always visible, never scrolls away. ─── */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.lg,
-          marginBottom: spacing.xl,
+          flexShrink: 0,
+          paddingTop: spacing.md,
+          paddingLeft: spacing.lg,
+          paddingRight: spacing.lg,
+          paddingBottom: spacing.lg + 8, // breathing room for the tactile shadow
+          background: colors.bg,
+          borderTop: `1px solid ${colors.border}`,
         }}
       >
         <Button
-          variant="secondary"
-          size="md"
+          variant="primary"
+          size="hero"
           accentColor={accent}
-          onClick={() => setRounds(Math.max(3, rounds - 1))}
-          disabled={rounds <= 3}
-          ariaLabel="−"
-          style={{
-            width: 56,
-            paddingLeft: 0,
-            paddingRight: 0,
-            fontSize: fontSizes.h2,
-          }}
+          shadowColor={accentShadow}
+          fullWidth
+          disabled={!canStart}
+          onClick={() => canStart && onStart(roster, rounds)}
         >
-          −
-        </Button>
-        <div
-          style={{
-            fontSize: fontSizes.h1,
-            fontWeight: fontWeights.black,
-            minWidth: 80,
-            textAlign: 'center',
-            color: colors.textPrimary,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {rounds}
-        </div>
-        <Button
-          variant="secondary"
-          size="md"
-          accentColor={accent}
-          onClick={() => setRounds(Math.min(10, rounds + 1))}
-          disabled={rounds >= 10}
-          ariaLabel="+"
-          style={{
-            width: 56,
-            paddingLeft: 0,
-            paddingRight: 0,
-            fontSize: fontSizes.h2,
-          }}
-        >
-          +
+          {L.quickSetup.start}
         </Button>
       </div>
-
-      <div style={{ flex: 1 }} />
-
-      {/* ─── Big tactile Graj button ─── */}
-      <Button
-        variant="primary"
-        size="hero"
-        accentColor={accent}
-        shadowColor={accentShadow}
-        fullWidth
-        disabled={!canStart}
-        onClick={() => canStart && onStart(roster, rounds)}
-      >
-        {L.quickSetup.start}
-      </Button>
     </div>
   )
 }
@@ -376,39 +357,9 @@ function CountCell({ label, active, disabled, accent, accentShadow, onClick }) {
   )
 }
 
-// Compact rounded pill that displays a player's funny default name.
-function NameChip({ name, accent }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        background: colors.bgSubtle,
-        border: `1.5px solid ${colors.border}`,
-        borderRadius: radii.pill,
-        padding: `${spacing.xs}px ${spacing.md}px`,
-        fontSize: fontSizes.bodySm,
-        fontWeight: fontWeights.extraBold,
-        color: colors.textPrimary,
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: accent,
-          marginRight: spacing.sm,
-        }}
-      />
-      {name}
-    </span>
-  )
-}
-
 // Inline editable name input. Number badge on the left, text input on the
 // right. Border thickens to the mode accent on focus.
+// Kept compact (40px row) so 5–8 players fit on a mid-size phone.
 function NameInput({ index, value, accent, onChange }) {
   const className = `name-input-${index}`
   return (
@@ -423,8 +374,8 @@ function NameInput({ index, value, accent, onChange }) {
           font-family: ${fonts.sans};
           font-size: ${fontSizes.body}px;
           font-weight: ${fontWeights.bold};
-          padding: ${spacing.sm}px ${spacing.md}px;
-          min-height: 44px;
+          padding: ${spacing.xs}px ${spacing.md}px;
+          min-height: 40px;
           outline: none;
           transition: border-color 120ms ease, box-shadow 120ms ease;
         }
@@ -440,8 +391,8 @@ function NameInput({ index, value, accent, onChange }) {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 28,
-            height: 28,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: accent,
             color: '#FFFFFF',
