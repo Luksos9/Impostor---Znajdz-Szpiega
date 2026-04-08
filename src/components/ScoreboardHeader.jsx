@@ -33,7 +33,7 @@ export default function ScoreboardHeader({
       style={{
         background: colors.bgSubtle,
         borderBottom: `1px solid ${colors.border}`,
-        padding: `${spacing.sm}px ${spacing.md}px`,
+        padding: `${spacing.xs}px ${spacing.md}px`,
         fontFamily: fonts.sans,
       }}
     >
@@ -42,7 +42,7 @@ export default function ScoreboardHeader({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: spacing.sm,
+          marginBottom: spacing.xs,
         }}
       >
         <ProgressDots
@@ -88,7 +88,7 @@ export default function ScoreboardHeader({
                 border: `1px solid ${colors.border}`,
                 borderRadius: radii.pill,
                 boxShadow: shadows.soft,
-                padding: `${spacing.xs}px ${spacing.md}px`,
+                padding: `2px ${spacing.md}px`,
                 fontSize: fontSizes.bodySm,
                 color: colors.textPrimary,
                 display: 'inline-flex',

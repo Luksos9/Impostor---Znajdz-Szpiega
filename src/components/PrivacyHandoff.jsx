@@ -11,7 +11,11 @@ export default function PrivacyHandoff({ playerName, onReady }) {
     <div
       className="anim-enter"
       style={{
-        minHeight: '100dvh',
+        // Fill the parent flex slot below ScoreboardHeader without forcing a
+        // second 100dvh box that would overflow on short phones. Matches the
+        // flex:1/minHeight:0 pattern used by ModeClassic's describe phase.
+        flex: 1,
+        minHeight: 0,
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
@@ -59,7 +63,7 @@ export default function PrivacyHandoff({ playerName, onReady }) {
           color: colors.textSecondary,
           maxWidth: 320,
           margin: 0,
-          marginBottom: spacing.xxl,
+          marginBottom: spacing.xl,
           lineHeight: 1.4,
           fontWeight: fontWeights.semibold,
         }}

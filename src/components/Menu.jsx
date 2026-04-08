@@ -59,7 +59,16 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
         </div>
       )}
 
-      <header style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+      <header
+        style={{
+          textAlign: 'center',
+          marginBottom: spacing.xl,
+          // Inset both sides so the tagline and title can't run under the
+          // absolute-positioned ThemeToggle (top-right, 48×48 at spacing.lg).
+          paddingLeft: spacing.xxl,
+          paddingRight: spacing.xxl,
+        }}
+      >
         <div
           style={{
             fontSize: fontSizes.eyebrow,
