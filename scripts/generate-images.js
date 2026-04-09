@@ -40,52 +40,46 @@ const MODEL_CANDIDATES = [
   'gemini-2.5-flash-image',        // Nano Banana 1
 ]
 
-// Duolingo-style prompts: bright saturated backgrounds, chunky cartoon characters
-// with big friendly eyes, soft rounded shapes, kid-friendly, playful.
+// Iconic 3D-rendered mode card illustrations. Single-subject compositions,
+// glossy soft-plastic look, centered, square 1:1. Backgrounds use the exact
+// mode accent hex values locked in src/styles/theme.js (red / blue / emerald).
 const IMAGES = [
   {
     filename: 'mode-classic.png',
     prompt:
-      'Cute Duolingo-style kid-friendly cartoon mascot illustration for a party game card. ' +
-      'Bright coral red background (#ef4444) with a soft radial gradient. ' +
-      'Composition: four chunky round cartoon characters with huge friendly round eyes and soft rubbery bodies, ' +
-      'three identical cheerful civilian characters in pastel outfits standing in a row, ' +
-      'and one adorable impostor character in the middle wearing a tiny black eye mask and giggling mischievously, ' +
-      'with a floating cartoon question mark bubble above its head. ' +
-      'Round chunky proportions, soft ambient shadows, clean flat shading with pastel highlights, ' +
-      'modern 3D-rendered soft plastic look like Duolingo mascots. ' +
-      'Playful, warm, inviting, NOT scary. No text, no letters. ' +
+      'Iconic 3D-rendered cartoon illustration for a party game card. ' +
+      'Bright coral red background, exact hex #ef4444, with a soft radial gradient from lighter red at the center to deeper red at the edges. ' +
+      'Composition: a single large theatrical comedy mask (the happy smiling greek-tragedy-style mask) rendered in glossy 3D with smooth rounded edges, soft plastic shading, and cheerful friendly big cartoon eyes, sitting slightly left of center and slightly tilted. ' +
+      'Beside it on the right, a second smaller cartoon "imposter" mask in deep crimson red with mischievous slanted eyes, a tiny black eye-band, and a sly devil smirk — clearly the odd one out. ' +
+      'Round chunky proportions, soft ambient shadows beneath both masks, subtle pastel highlights, modern 3D soft-plastic look like Duolingo or Apple mascots. ' +
+      'Playful, warm, inviting, NOT scary. Absolutely no text, no letters, no numbers, no symbols anywhere. ' +
       'Square 1:1 aspect ratio, designed for a mobile app card. ' +
-      'Centered composition with generous padding around the characters.',
+      'Centered composition with generous padding around the masks so they do not touch the edges.',
   },
   {
     filename: 'mode-pairs-question.png',
     prompt:
-      'Cute Duolingo-style kid-friendly cartoon mascot illustration for a party game card. ' +
-      'Bright sky blue background (#3b82f6) with a soft radial gradient. ' +
-      'Composition: four chunky cartoon speech bubble characters with huge friendly round eyes and small arms, ' +
-      'arranged in a 2x2 grid, three identical happy smiling bubbles in a row ' +
-      'and one bubble in the corner with a confused puzzled expression, tilted head, and a tiny squiggle over it. ' +
-      'Round chunky proportions, soft ambient shadows, pastel highlights, ' +
-      'modern 3D-rendered soft plastic look like Duolingo mascots. ' +
-      'Playful, warm, inviting, fun. No text, no letters inside the bubbles. ' +
+      'Iconic 3D-rendered cartoon illustration for a party game card. ' +
+      'Bright sky blue background, exact hex #3b82f6, with a soft radial gradient from lighter blue at the center to deeper blue at the edges. ' +
+      'Composition: one large chunky 3D cartoon speech bubble in glossy sky blue, centered, with smooth rounded edges and subtle pastel highlights. The speech bubble is EMPTY inside, plain surface, no text, no letters. ' +
+      'Around the bubble, four or five floating cartoon question marks of varying sizes in white and pale blue, gently swirling around it as if orbiting — some bigger, some smaller, at different tilt angles. The question marks are simple clean shapes, NOT made of letters. ' +
+      'Round chunky proportions, soft ambient shadows, pastel highlights, modern 3D soft-plastic look like Duolingo mascots. ' +
+      'Playful, warm, inviting, curious. Absolutely no text, no letters, no numbers inside the bubble or anywhere else. ' +
       'Square 1:1 aspect ratio, designed for a mobile app card. ' +
-      'Centered composition with generous padding around the characters.',
+      'Centered composition with generous padding around the bubble.',
   },
   {
     filename: 'mode-kameleon.png',
     prompt:
-      'Cute Duolingo-style kid-friendly cartoon mascot illustration for a party game card. ' +
-      'Bright emerald green background (#10b981) with a soft radial gradient. ' +
-      'Composition: one adorable chunky cartoon chameleon mascot character with enormous friendly round eyes, ' +
-      'a curly tail, tiny feet, and a small confused-curious smile, ' +
-      'sitting on top of a 4x4 grid of soft rounded colorful pastel tiles, ' +
-      'one tile glowing brighter as if it holds a secret. ' +
-      'Round chunky proportions, soft ambient shadows, pastel highlights, ' +
-      'modern 3D-rendered soft plastic look like Duolingo mascots (think the Duo owl). ' +
-      'Playful, warm, inviting, adorable. No text, no letters on the tiles. ' +
+      'Iconic 3D-rendered cartoon illustration for a party game card. ' +
+      'Bright emerald green background, exact hex #10b981, with a soft radial gradient from lighter green at the center to deeper green at the edges. ' +
+      'Composition: one adorable 3D cartoon chameleon mascot in vivid leaf-green with enormous friendly round cartoon eyes, a curly spiral tail, tiny stubby feet, and a small confused-curious closed-mouth smile. ' +
+      'The chameleon sits centered, its curly tail coiling playfully around a small 3x3 grid of chunky saturated cartoon squares behind and beneath it. The grid squares are bright saturated cartoon colors: cherry red, sunny yellow, leaf green, sky blue, lilac purple, and orange — NOT pastel, NOT washed out, fully saturated. The squares have soft rounded corners and subtle glossy highlights. ' +
+      'One square just behind the chameleon glows slightly brighter as if it holds a secret. ' +
+      'Round chunky proportions, soft ambient shadows, subtle pastel highlights on the chameleon body, modern 3D soft-plastic look like Duolingo mascots (think the Duo owl style). ' +
+      'Playful, warm, inviting, adorable. Absolutely no text, no letters, no numbers on the tiles or anywhere. ' +
       'Square 1:1 aspect ratio, designed for a mobile app card. ' +
-      'Centered composition with generous padding around the chameleon.',
+      'Centered composition with generous padding around the chameleon and grid.',
   },
 ]
 
