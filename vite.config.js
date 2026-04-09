@@ -11,9 +11,9 @@ export default defineConfig({
       includeAssets: [
         'favicon.ico',
         'apple-touch-icon-180x180.png',
-        'images/classic.png',
-        'images/questions.png',
-        'images/kameleon.png',
+        'images/mode-classic.png',
+        'images/mode-pairs-question.png',
+        'images/mode-kameleon.png',
       ],
       manifest: {
         name: 'Impostor — Gra imprezowa',

@@ -14,12 +14,12 @@ import { L } from '../utils/labels'
 import { MODE_REGISTRY } from '../data/modes'
 import ThemeToggle from './ui/ThemeToggle'
 
-// Iconic 3D-rendered mode illustrations hand-picked by the user. Dark navy
-// backgrounds sit on the cream Card wrappers in Menu as badge-like tiles.
+// Illustrations generated via Gemini's Nano Banana Pro 2 (gemini-3-pro-image-preview).
+// Match the mode accent colors from theme.js. One-off via scripts/generate-images.js.
 const MODE_IMAGES = {
-  classic: '/images/classic.png',
-  pairsQuestion: '/images/questions.png',
-  kameleon: '/images/kameleon.png',
+  classic: '/images/mode-classic.png',
+  pairsQuestion: '/images/mode-pairs-question.png',
+  kameleon: '/images/mode-kameleon.png',
 }
 
 // Menu screen — cream background, chunky white hero card, two secondary cards.
