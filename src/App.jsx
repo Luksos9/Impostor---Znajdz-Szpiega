@@ -8,6 +8,7 @@ import { getMode } from './data/modes'
 import { getSettings, saveSettings } from './utils/storage'
 import { applyDeltas } from './utils/scoring'
 import { colors } from './styles/theme'
+import { isNative } from './utils/platform'
 
 // Top-level state machine.
 // Screens: 'menu' → 'setup' → 'playing' → 'gameover'
@@ -28,6 +29,14 @@ export default function App() {
     // Keep the iOS status bar / browser chrome in sync with the new bg.
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+
+    // Native: sync the Android/iOS status bar color and style.
+    if (isNative) {
+      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+        StatusBar.setStyle({ style: mode === 'dark' ? Style.Dark : Style.Light }).catch(() => {})
+        StatusBar.setBackgroundColor({ color: mode === 'dark' ? '#181412' : '#FFF8EC' }).catch(() => {})
+      })
+    }
   }, [settings.themeMode])
 
   const toggleTheme = () => {
