@@ -51,24 +51,19 @@ export default function ScoreboardHeader({
           accentColor={accent}
           size="sm"
         />
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
+          accentColor={colors.danger}
+          shadowColor={colors.dangerShadow}
           onClick={() => setConfirming(true)}
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: colors.textMuted,
-            fontFamily: fonts.sans,
-            fontSize: fontSizes.bodySm,
-            fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            padding: `${spacing.xs}px ${spacing.sm}px`,
-            cursor: 'pointer',
+            letterSpacing: '0.08em',
           }}
         >
           {L.scoreboard.quit}
-        </button>
+        </Button>
       </div>
 
       <div
