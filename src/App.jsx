@@ -165,6 +165,9 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflowY: 'auto',
+            maxWidth: 480,
+            width: '100%',
+            margin: '0 auto',
           }}
         >
           <ModeComp

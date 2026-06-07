@@ -35,7 +35,7 @@ export default function PhaseIntro({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: spacing.md,
+        paddingTop: spacing.lg,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
         paddingBottom: spacing.lg,

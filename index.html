@@ -103,7 +103,13 @@
       input, textarea { font-family: inherit; }
 
       .anim-enter {
-        animation: fadeSlideUp 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation: fadeSlideUp 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      .anim-fade {
+        animation: fadeIn 280ms ease both;
+      }
+      .anim-stagger {
+        animation: fadeSlideUp 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       .anim-pop {
         animation: pop 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -113,8 +119,12 @@
       }
 
       @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(16px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(12px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
       }
       @keyframes pop {
         0%   { opacity: 0; transform: scale(0.6); }
@@ -127,7 +137,7 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .anim-enter, .anim-pop, .anim-bob { animation: none !important; }
+        .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob { animation: none !important; }
         html, body, #root { transition: none !important; }
       }
     </style>

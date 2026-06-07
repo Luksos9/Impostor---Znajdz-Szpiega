@@ -72,6 +72,9 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
+        maxWidth: 480,
+        width: '100%',
+        margin: '0 auto',
       }}
     >
       {/* Scrollable middle — everything except the pinned Graj footer. */}

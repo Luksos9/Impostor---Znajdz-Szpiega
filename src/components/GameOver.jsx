@@ -24,6 +24,9 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
         paddingBottom: spacing.xl + 8,
         paddingLeft: spacing.lg,
         paddingRight: spacing.lg,
+        maxWidth: 480,
+        width: '100%',
+        margin: '0 auto',
       }}
     >
       <div
