@@ -141,16 +141,54 @@
         0%, 100% { transform: translateY(0); }
         50%      { transform: translateY(-4px); }
       }
+      @keyframes bounceIn {
+        0%   { opacity: 0; transform: scale(0.3); }
+        50%  { opacity: 1; transform: scale(1.08); }
+        70%  { transform: scale(0.95); }
+        100% { transform: scale(1); }
+      }
+      .anim-bounce {
+        animation: bounceIn 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%      { transform: translateX(-8px); }
+        40%      { transform: translateX(8px); }
+        60%      { transform: translateX(-4px); }
+        80%      { transform: translateX(4px); }
+      }
+      .anim-shake {
+        animation: shake 400ms ease both;
+      }
+      @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(43, 179, 115, 0); }
+        50%      { box-shadow: 0 0 20px 4px rgba(43, 179, 115, 0.4); }
+      }
+      .anim-glow {
+        animation: glowPulse 1.2s ease-in-out 0.5s 2;
+      }
+      @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(40px); }
+        to   { opacity: 1; transform: translateX(0); }
+      }
+      .anim-slide-right {
+        animation: slideInRight 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
       @keyframes confettiFall {
-        0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        0%   { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+        25%  { transform: translateY(25vh) rotate(180deg) translateX(15px); }
+        50%  { transform: translateY(50vh) rotate(360deg) translateX(-10px); }
+        75%  { transform: translateY(75vh) rotate(540deg) translateX(12px); }
+        100% { transform: translateY(105vh) rotate(720deg) translateX(-5px); opacity: 0; }
       }
       .anim-confetti {
-        animation: confettiFall 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        animation: confettiFall 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob, .anim-confetti { animation: none !important; }
+        .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob,
+        .anim-bounce, .anim-shake, .anim-glow, .anim-slide-right,
+        .anim-confetti { animation: none !important; }
         html, body, #root { transition: none !important; }
       }
     </style>

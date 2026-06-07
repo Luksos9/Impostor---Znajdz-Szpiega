@@ -6,7 +6,7 @@ import Card from './ui/Card'
 import { hapticSuccess } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
 
-const CONFETTI_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#F5A623', '#A855F7']
+const CONFETTI_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#F5A623', '#A855F7', '#EC4899', '#FFFFFF']
 
 // Final standings after the last round.
 // Players sorted by score descending. Winners get a celebrated success row.
@@ -21,14 +21,15 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
   const winners = sorted.filter((p) => (scores[p.id] || 0) === topScore)
 
   const confetti = useMemo(() =>
-    Array.from({ length: 24 }, (_, i) => ({
+    Array.from({ length: 40 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      delay: `${Math.random() * 1.2}s`,
-      duration: `${1.5 + Math.random() * 1.5}s`,
-      size: 6 + Math.random() * 6,
+      delay: `${Math.random() * 1.5}s`,
+      duration: `${2 + Math.random() * 1.5}s`,
+      size: 8 + Math.random() * 8,
       rotation: Math.random() * 360,
+      round: i % 3 === 0,
     })), [])
 
   return (
@@ -63,9 +64,9 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
             top: -12,
             left: c.left,
             width: c.size,
-            height: c.size * 1.4,
+            height: c.round ? c.size : c.size * 1.4,
             background: c.color,
-            borderRadius: 2,
+            borderRadius: c.round ? '50%' : 2,
             animationDelay: c.delay,
             animationDuration: c.duration,
             transform: `rotate(${c.rotation}deg)`,
@@ -116,7 +117,7 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
             elevation="strong"
             padded="none"
             border="none"
-            className="anim-pop"
+            className="anim-bounce anim-glow"
             style={{
               border: `4px solid ${colors.success}`,
               boxShadow: `${tactileShadow(colors.successShadow)}, 0 18px 40px var(--shadow-strong)`,
