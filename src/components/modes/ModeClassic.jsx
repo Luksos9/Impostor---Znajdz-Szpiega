@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react'
+import { hapticHeavy } from '../../utils/haptics'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
@@ -469,7 +470,10 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
           shadowColor={accentShadow}
           fullWidth
           disabled={!guessText.trim()}
-          onClick={() => setPhase('result')}
+          onClick={() => {
+            hapticHeavy()
+            setPhase('result')
+          }}
         >
           {L.classic.submitGuess}
         </Button>
