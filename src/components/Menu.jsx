@@ -27,21 +27,10 @@ const MODE_IMAGES = {
 // what the player sees first.
 const MENU_ORDER = ['classic', 'kameleon', 'pairsQuestion']
 
-// Subtle detective atmosphere — bowler hat + eye mask silhouettes tiled at
-// very low opacity behind the cards. Inline SVG as a data URI so the
-// pattern ships with the JS bundle and never needs a separate asset.
-const SILHOUETTE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"><g fill="rgba(255,255,255,0.055)"><path d="M30 40 L30 30 Q30 16 46 16 Q62 16 62 30 L62 40 L68 40 Q70 40 70 42 L70 44 L22 44 L22 42 Q22 40 24 40 Z"/><path d="M130 138 L186 138 Q192 138 192 144 L192 152 Q190 160 180 160 L168 160 L162 168 L157 160 L146 160 Q136 160 132 152 L132 144 Q132 138 138 138 Z"/><circle cx="160" cy="60" r="9" fill="none" stroke="rgba(255,255,255,0.055)" stroke-width="2"/><line x1="167" y1="67" x2="176" y2="76" stroke="rgba(255,255,255,0.055)" stroke-width="2"/></g></svg>`
-const SILHOUETTE_URL = `url("data:image/svg+xml;utf8,${encodeURIComponent(SILHOUETTE_SVG)}")`
 
-// Menu — always-dark gaming shell with neon-glow mode cards.
-//
-// Overrides the theme for visual impact: the rest of the app follows the
-// user's light/dark toggle, but the Menu is hardcoded deep-black + neon
-// so the illustrations pop like badges. Horizontal layout, illustration
-// fills the left edge of each card, text stacks on the right. All three
-// cards share the same size — "hero" status is communicated only through
-// the "TRYB GŁÓWNY" eyebrow, not a bigger footprint.
-//
+// Menu — theme-aware with accent-colored card borders.
+// In dark mode the accent glows pop as neon; in light mode the same
+// borders read as vivid stripes on cream surfaces.
 // Content is clamped to a centered ~560px column so desktop doesn't
 // stretch the cards into thin strips.
 export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme }) {
@@ -54,23 +43,21 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
       className="anim-enter"
       style={{
         minHeight: '100dvh',
-        background: '#030303',
-        color: '#FFFFFF',
+        background: colors.bg,
+        color: colors.textPrimary,
         fontFamily: fonts.sans,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         paddingTop: spacing.xxl,
-        paddingBottom: spacing.xl,
+        paddingBottom: spacing.xxl,
         paddingLeft: spacing.md,
         paddingRight: spacing.md,
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Background atmosphere — colored bokeh orbs behind the cards.
-          Each radial gradient leaks the mode accent across the page so
-          the cards look like they're glowing onto the environment. */}
+      {/* Background atmosphere — colored bokeh orbs behind the cards. */}
       <div
         aria-hidden="true"
         style={{
@@ -78,25 +65,10 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
           inset: 0,
           pointerEvents: 'none',
           background: `
-            radial-gradient(circle at 22% 28%, rgba(239, 68, 68, 0.22), transparent 42%),
-            radial-gradient(circle at 78% 50%, rgba(16, 185, 129, 0.20), transparent 44%),
-            radial-gradient(circle at 30% 82%, rgba(59, 130, 246, 0.22), transparent 44%)
+            radial-gradient(circle at 22% 28%, rgba(239, 68, 68, 0.14), transparent 42%),
+            radial-gradient(circle at 78% 50%, rgba(16, 185, 129, 0.12), transparent 44%),
+            radial-gradient(circle at 30% 82%, rgba(59, 130, 246, 0.14), transparent 44%)
           `,
-        }}
-      />
-
-      {/* Subtle detective silhouette pattern — bowler hats, eye masks,
-          magnifying glasses at very low opacity, tiled across the page. */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          backgroundImage: SILHOUETTE_URL,
-          backgroundSize: '220px 220px',
-          backgroundRepeat: 'repeat',
-          opacity: 0.9,
         }}
       />
 
@@ -140,7 +112,7 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
               fontWeight: fontWeights.extraBold,
               textTransform: 'uppercase',
               letterSpacing: '0.14em',
-              color: 'rgba(255,255,255,0.55)',
+              color: colors.textMuted,
               marginBottom: spacing.sm,
             }}
           >
@@ -152,8 +124,7 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
               fontWeight: fontWeights.black,
               margin: 0,
               letterSpacing: '-0.02em',
-              color: '#FFFFFF',
-              textShadow: '0 0 24px rgba(255,255,255,0.22)',
+              color: colors.textPrimary,
             }}
           >
             {L.app.title}
@@ -166,7 +137,7 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
             fontWeight: fontWeights.extraBold,
             textTransform: 'uppercase',
             letterSpacing: '0.14em',
-            color: 'rgba(255,255,255,0.45)',
+            color: colors.textMuted,
             marginBottom: spacing.md,
             textAlign: 'center',
           }}
@@ -212,11 +183,11 @@ function NeonModeCard({ mode, onClick, imageSrc }) {
     <button type="button" onClick={onClick} className={className}>
       <style>{`
         .${className} {
-          background: #0B0B0B;
+          background: ${colors.surface};
           border: 2px solid ${accent};
           border-radius: ${radii.xxl}px;
           padding: 0;
-          color: #FFFFFF;
+          color: ${colors.textPrimary};
           text-align: left;
           cursor: pointer;
           box-shadow:
@@ -321,7 +292,7 @@ function NeonModeCard({ mode, onClick, imageSrc }) {
             lineHeight: 1.1,
             marginBottom: spacing.xs,
             letterSpacing: '-0.02em',
-            color: '#FFFFFF',
+            color: colors.textPrimary,
           }}
         >
           {mode.label}
@@ -329,7 +300,7 @@ function NeonModeCard({ mode, onClick, imageSrc }) {
         <div
           style={{
             fontSize: fontSizes.bodySm,
-            color: 'rgba(255,255,255,0.62)',
+            color: colors.textSecondary,
             lineHeight: 1.35,
             fontWeight: fontWeights.semibold,
           }}

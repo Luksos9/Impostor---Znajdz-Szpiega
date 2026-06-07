@@ -345,7 +345,7 @@ function CountCell({ label, active, disabled, accent, accentShadow, onClick }) {
         }
         .${className}:focus-visible {
           outline: none;
-          box-shadow: ${boxShadow}, 0 0 0 3px rgba(43, 43, 43, 0.18);
+          box-shadow: ${boxShadow}, 0 0 0 3px var(--focus-ring);
         }
       `}</style>
       <button
