@@ -1,20 +1,30 @@
+import { useState } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
 import Button from './ui/Button'
+import { hapticMedium } from '../utils/haptics'
 
 // Single voter's voting screen. Shows every player except the voter themselves.
-// Single tap commits a vote and calls onVote(targetId).
+// Single tap commits a vote, disables all buttons, and calls onVote(targetId).
 // Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
 export default function VoteGrid({ players, voterId, voterName, onVote, accent }) {
+  const [voted, setVoted] = useState(false)
   const candidates = players.filter((p) => p.id !== voterId)
-  // 1-col on tight screens (≤4 candidates) so labels never truncate, 2-col otherwise.
   const cols = candidates.length <= 4 ? '1fr' : '1fr 1fr'
+
+  const handleVote = (targetId) => {
+    if (voted) return
+    setVoted(true)
+    hapticMedium()
+    onVote(targetId)
+  }
 
   return (
     <div
       className="anim-enter"
       style={{
-        minHeight: '100dvh',
+        flex: 1,
+        minHeight: 0,
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
@@ -78,12 +88,33 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
             size="lg"
             accentColor={accent || colors.textPrimary}
             fullWidth
-            onClick={() => onVote(p.id)}
+            disabled={voted}
+            onClick={() => handleVote(p.id)}
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
           >
             {p.name}
           </Button>
         ))}
       </div>
+
+      {voted && (
+        <div
+          className="anim-enter"
+          style={{
+            textAlign: 'center',
+            marginTop: spacing.lg,
+            fontSize: fontSizes.body,
+            fontWeight: fontWeights.extraBold,
+            color: colors.success,
+          }}
+        >
+          {L.vote.confirmed}
+        </div>
+      )}
     </div>
   )
 }

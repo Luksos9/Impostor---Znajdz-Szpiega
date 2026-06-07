@@ -99,6 +99,7 @@ export const L = {
   vote: {
     title: 'Głosuj',
     instruction: 'Stuknij, kogo podejrzewasz',
+    confirmed: 'Głos oddany',
   },
 
   result: {

@@ -76,7 +76,6 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
               border: `4px solid ${roleColor}`,
               padding: `${spacing.xxl}px ${spacing.lg}px`,
               marginBottom: spacing.xl,
-              minWidth: 280,
               maxWidth: 420,
               textAlign: 'center',
             }}

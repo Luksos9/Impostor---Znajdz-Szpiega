@@ -83,11 +83,15 @@ export function resizeRoster(currentRoster, count) {
 }
 
 // Update one player's name in a roster. Returns a new array.
-// Empty/whitespace input falls back to a funny name to avoid crash on submit.
+// Strips emoji and caps at 14 chars so names fit scoreboard pills and
+// vote buttons without overflow. Empty input falls back to previous name.
 export function renamePlayer(roster, playerId, nextName) {
-  const trimmed = (nextName || '').trim()
+  const sanitized = (nextName || '')
+    .replace(/\p{Emoji_Presentation}/gu, '')
+    .trim()
+    .slice(0, 14)
   return roster.map((p) =>
-    p.id === playerId ? { ...p, name: trimmed || p.name } : p
+    p.id === playerId ? { ...p, name: sanitized || p.name } : p
   )
 }
 
