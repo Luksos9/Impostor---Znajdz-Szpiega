@@ -5,7 +5,7 @@ const SETTINGS_KEY = 'imposter.settings'
 
 const DEFAULT_SETTINGS = {
   totalRounds: 5,
-  soundsEnabled: false,
+  soundsEnabled: true,
   themeMode: 'light', // 'light' | 'dark'
 }
 

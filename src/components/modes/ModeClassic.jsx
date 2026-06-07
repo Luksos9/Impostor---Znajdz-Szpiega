@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import { hapticHeavy } from '../../utils/haptics'
+import { playSound } from '../../utils/sounds'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
@@ -491,9 +492,11 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
     if (caught) {
       deltas = awardCorrectVoters(deltas, votes, impostorIds, 1)
       narrative = L.result.impostorCaught
+      playSound('correct')
     } else {
       deltas = awardImpostorSurvival(deltas, impostorIds, 2)
       narrative = L.result.impostorEscaped
+      playSound('wrong')
     }
     return (
       <RoundResult
@@ -518,6 +521,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   if (phase === 'result') {
     // Impostor guess result.
     const correct = compareWordGuess(guessText, content.word)
+    playSound(correct ? 'correct' : 'wrong')
     let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
     let narrative
     if (correct) {

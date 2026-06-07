@@ -141,9 +141,16 @@
         0%, 100% { transform: translateY(0); }
         50%      { transform: translateY(-4px); }
       }
+      @keyframes confettiFall {
+        0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+      }
+      .anim-confetti {
+        animation: confettiFall 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+      }
 
       @media (prefers-reduced-motion: reduce) {
-        .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob { animation: none !important; }
+        .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob, .anim-confetti { animation: none !important; }
         html, body, #root { transition: none !important; }
       }
     </style>

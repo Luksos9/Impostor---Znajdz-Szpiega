@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { playSound } from '../utils/sounds'
 import {
   colors,
   fonts,
@@ -277,7 +278,11 @@ export default function QuickSetup({ modeId, initialRounds, onBack, onStart }) {
           shadowColor={accentShadow}
           fullWidth
           disabled={!canStart}
-          onClick={() => canStart && onStart(roster, rounds)}
+          onClick={() => {
+            if (!canStart) return
+            playSound('roundEnd')
+            onStart(roster, rounds)
+          }}
         >
           {L.quickSetup.start}
         </Button>

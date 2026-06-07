@@ -1,19 +1,42 @@
+import { useEffect, useMemo } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing, tactileShadow } from '../styles/theme'
 import { L } from '../utils/labels'
 import Button from './ui/Button'
 import Card from './ui/Card'
+import { hapticSuccess } from '../utils/haptics'
+import { playSound } from '../utils/sounds'
+
+const CONFETTI_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#F5A623', '#A855F7']
 
 // Final standings after the last round.
 // Players sorted by score descending. Winners get a celebrated success row.
 export default function GameOver({ players, scores, onRestart, onMenu }) {
+  useEffect(() => {
+    hapticSuccess()
+    playSound('celebrate')
+  }, [])
+
   const sorted = [...players].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
   const topScore = sorted.length > 0 ? scores[sorted[0].id] || 0 : 0
   const winners = sorted.filter((p) => (scores[p.id] || 0) === topScore)
+
+  const confetti = useMemo(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: `${Math.random() * 1.2}s`,
+      duration: `${1.5 + Math.random() * 1.5}s`,
+      size: 6 + Math.random() * 6,
+      rotation: Math.random() * 360,
+    })), [])
 
   return (
     <div
       className="anim-enter"
       style={{
+        position: 'relative',
+        overflow: 'hidden',
         minHeight: '100dvh',
         background: colors.bg,
         color: colors.textPrimary,
@@ -29,6 +52,29 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
         margin: '0 auto',
       }}
     >
+      {/* Confetti burst */}
+      {confetti.map((c) => (
+        <span
+          key={c.id}
+          className="anim-confetti"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: -12,
+            left: c.left,
+            width: c.size,
+            height: c.size * 1.4,
+            background: c.color,
+            borderRadius: 2,
+            animationDelay: c.delay,
+            animationDuration: c.duration,
+            transform: `rotate(${c.rotation}deg)`,
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
       <div
         style={{
           fontSize: fontSizes.eyebrow,
@@ -135,7 +181,9 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
           return (
             <div
               key={p.id}
+              className="anim-stagger"
               style={{
+                animationDelay: `${300 + idx * 60}ms`,
                 display: 'flex',
                 alignItems: 'baseline',
                 justifyContent: 'space-between',

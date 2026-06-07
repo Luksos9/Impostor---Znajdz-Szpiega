@@ -3,6 +3,7 @@ import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
 import Button from './ui/Button'
 import { hapticMedium } from '../utils/haptics'
+import { playSound } from '../utils/sounds'
 
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote, disables all buttons, and calls onVote(targetId).
@@ -16,6 +17,7 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
     if (voted) return
     setVoted(true)
     hapticMedium()
+    playSound('vote')
     onVote(targetId)
   }
 
