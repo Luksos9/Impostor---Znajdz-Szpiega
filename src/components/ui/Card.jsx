@@ -100,7 +100,7 @@ export default function Card({
         }
         .${className}:focus-visible {
           outline: none;
-          box-shadow: ${shadow}, 0 0 0 3px rgba(43,43,43,0.18);
+          box-shadow: ${shadow}, 0 0 0 3px var(--focus-ring);
         }
       `
     : ''

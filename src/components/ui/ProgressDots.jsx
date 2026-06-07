@@ -58,7 +58,7 @@ export default function ProgressDots({
               height: s.dot,
               borderRadius: '50%',
               background: isActive ? accentColor : colors.textDim,
-              boxShadow: isActive ? `0 ${s.shadow}px 0 rgba(43,43,43,0.18)` : 'none',
+              boxShadow: isActive ? `0 ${s.shadow}px 0 var(--shadow-tactile-neutral)` : 'none',
               transition: 'background 200ms ease, box-shadow 200ms ease',
             }}
           />

@@ -127,7 +127,7 @@ export default function Button({
     }
     .${className}:focus-visible {
       outline: none;
-      box-shadow: ${boxShadow === 'none' ? '0 0 0 3px rgba(43,43,43,0.18)' : boxShadow + ', 0 0 0 3px rgba(43,43,43,0.18)'};
+      box-shadow: ${boxShadow === 'none' ? '0 0 0 3px var(--focus-ring)' : boxShadow + ', 0 0 0 3px var(--focus-ring)'};
     }
   `
 

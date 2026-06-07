@@ -38,7 +38,7 @@ export default function ThemeToggle({ mode = 'light', onToggle }) {
         }
         .${className}:focus-visible {
           outline: none;
-          box-shadow: ${shadows.tactile}, 0 0 0 3px rgba(43, 43, 43, 0.18);
+          box-shadow: ${shadows.tactile}, 0 0 0 3px var(--focus-ring);
         }
       `}</style>
       <button

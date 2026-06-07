@@ -48,6 +48,7 @@
         --shadow-medium:      rgba(43, 43, 43, 0.10);
         --shadow-strong:      rgba(43, 43, 43, 0.18);
         --shadow-tactile-neutral: #C9C2B3;
+        --focus-ring:         rgba(43, 43, 43, 0.18);
 
         --illustration-bg:    #FFF8EC;
 
@@ -74,7 +75,8 @@
         --shadow-soft:        rgba(0, 0, 0, 0.35);
         --shadow-medium:      rgba(0, 0, 0, 0.45);
         --shadow-strong:      rgba(0, 0, 0, 0.6);
-        --shadow-tactile-neutral: #0E0B09;
+        --shadow-tactile-neutral: #000000;
+        --focus-ring:         rgba(255, 255, 255, 0.22);
 
         --illustration-bg:    #FFF8EC;
 
@@ -83,7 +85,11 @@
 
       html, body, #root {
         margin: 0;
-        padding: 0;
+        padding:
+          env(safe-area-inset-top, 0px)
+          env(safe-area-inset-right, 0px)
+          env(safe-area-inset-bottom, 0px)
+          env(safe-area-inset-left, 0px);
         min-height: 100%;
         background-color: var(--color-bg);
         color: var(--color-text-primary);
