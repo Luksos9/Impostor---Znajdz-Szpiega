@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   colors,
   fonts,
@@ -12,6 +12,7 @@ import {
 import { L } from '../utils/labels'
 import Card from './ui/Card'
 import Button from './ui/Button'
+import { playSound } from '../utils/sounds'
 
 // Secret card reveal with two-tap hide confirmation.
 // First tap on "Już pamiętam" hides the secret and shows "Schowane, tap to pass".
@@ -28,7 +29,12 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
   const [hidden, setHidden] = useState(false)
   const roleColor = colorForRole(role)
 
-  const handleFirstTap = () => setHidden(true)
+  useEffect(() => { playSound('reveal') }, [])
+
+  const handleFirstTap = () => {
+    playSound('tap')
+    setHidden(true)
+  }
   const handleSecondTap = () => onHide && onHide()
 
   return (

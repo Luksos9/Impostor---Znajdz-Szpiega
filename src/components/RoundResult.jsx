@@ -11,6 +11,7 @@ import { L } from '../utils/labels'
 import Button from './ui/Button'
 import Card from './ui/Card'
 import { hapticSuccess } from '../utils/haptics'
+import { playSound } from '../utils/sounds'
 
 // Round reveal: shows who was the impostor, delta points per player, narrative line.
 // Single "Następna runda" button advances. Last round: button says "Wyniki" instead.
@@ -30,7 +31,10 @@ export default function RoundResult({
   isLastRound,
   onNext,
 }) {
-  useEffect(() => { hapticSuccess() }, [])
+  useEffect(() => {
+    hapticSuccess()
+    playSound('roundEnd')
+  }, [])
 
   const impostors = players.filter((p) => impostorIds.includes(p.id))
   const impostorColor = colorForRole('impostor')
