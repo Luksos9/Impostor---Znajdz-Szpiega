@@ -264,6 +264,11 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         }}
       >
         <div
+          key={currentSpeaker.id}
+          className="anim-fade"
+          style={{ display: 'contents' }}
+        >
+        <div
           style={{
             fontSize: fontSizes.eyebrow,
             fontWeight: fontWeights.extraBold,
@@ -314,6 +319,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         >
           Powiedz JEDNO słowo pasujące do tajnego słowa
         </p>
+        </div>
 
         <Button
           variant="primary"

@@ -81,23 +81,28 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
           gap: spacing.md,
         }}
       >
-        {candidates.map((p) => (
-          <Button
+        {candidates.map((p, idx) => (
+          <div
             key={p.id}
-            variant="secondary"
-            size="lg"
-            accentColor={accent || colors.textPrimary}
-            fullWidth
-            disabled={voted}
-            onClick={() => handleVote(p.id)}
-            style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
+            className="anim-stagger"
+            style={{ animationDelay: `${idx * 60}ms` }}
           >
-            {p.name}
+            <Button
+              variant="secondary"
+              size="lg"
+              accentColor={accent || colors.textPrimary}
+              fullWidth
+              disabled={voted}
+              onClick={() => handleVote(p.id)}
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {p.name}
           </Button>
+          </div>
         ))}
       </div>
 

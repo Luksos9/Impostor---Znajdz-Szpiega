@@ -73,12 +73,14 @@ export default function ScoreboardHeader({
           flexWrap: 'wrap',
         }}
       >
-        {players.map((p) => {
+        {players.map((p, idx) => {
           const score = scores[p.id] || 0
           return (
             <div
               key={p.id}
+              className="anim-stagger"
               style={{
+                animationDelay: `${idx * 40}ms`,
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
                 borderRadius: radii.pill,

@@ -79,7 +79,8 @@ export default function PrivateInput({
     <div
       className="anim-enter"
       style={{
-        minHeight: '100dvh',
+        flex: 1,
+        minHeight: 0,
         background: colors.bg,
         color: colors.textPrimary,
         fontFamily: fonts.sans,
