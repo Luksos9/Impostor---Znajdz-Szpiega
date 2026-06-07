@@ -120,6 +120,8 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
   }
 
   // Describe phase: rotate through players, display-size speaker name.
+  // Persistent "I'm the impostor" guess button pinned at the bottom —
+  // available at any time during describes, matching Spyfall rules.
   if (phase === 'describe') {
     return (
       <div
@@ -132,83 +134,100 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
           fontFamily: fonts.sans,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
           paddingTop: spacing.lg,
           paddingLeft: spacing.lg,
           paddingRight: spacing.lg,
           paddingBottom: spacing.xl + 8,
-          textAlign: 'center',
         }}
       >
         <div
           style={{
-            fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.extraBold,
-            textTransform: 'uppercase',
-            letterSpacing: '0.14em',
-            color: accent,
-            marginBottom: spacing.md,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
           }}
         >
-          {t(L.classic.turn, { n: turn, total: MAX_TURNS })}
+          <div
+            style={{
+              fontSize: fontSizes.eyebrow,
+              fontWeight: fontWeights.extraBold,
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: accent,
+              marginBottom: spacing.md,
+            }}
+          >
+            {t(L.classic.turn, { n: turn, total: MAX_TURNS })}
+          </div>
+
+          <div
+            style={{
+              fontSize: fontSizes.bodyLg,
+              color: colors.textSecondary,
+              marginBottom: spacing.md,
+              fontWeight: fontWeights.semibold,
+            }}
+          >
+            {L.classic.nowSpeaking}
+          </div>
+
+          <h1
+            style={{
+              fontSize: fontSizes.display,
+              fontWeight: fontWeights.black,
+              margin: 0,
+              marginBottom: spacing.lg,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.05,
+              color: colors.textPrimary,
+            }}
+          >
+            {currentSpeaker.name}
+          </h1>
+
+          <p
+            style={{
+              fontSize: fontSizes.bodyLg,
+              color: colors.textSecondary,
+              margin: 0,
+              marginBottom: spacing.xxl,
+              maxWidth: 320,
+              lineHeight: 1.4,
+              fontWeight: fontWeights.semibold,
+            }}
+          >
+            {L.classic.describeHint}
+          </p>
+
+          <Button
+            variant="primary"
+            size="lg"
+            accentColor={accent}
+            shadowColor={accentShadow}
+            onClick={() => {
+              const nextSpeakerIdx = speakerIdx + 1
+              if (nextSpeakerIdx >= players.length) {
+                setPhase('decision')
+              } else {
+                setSpeakerIdx(nextSpeakerIdx)
+              }
+            }}
+            style={{ minWidth: 240 }}
+          >
+            {speakerIdx === players.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
+          </Button>
         </div>
-
-        <div
-          style={{
-            fontSize: fontSizes.bodyLg,
-            color: colors.textSecondary,
-            marginBottom: spacing.md,
-            fontWeight: fontWeights.semibold,
-          }}
-        >
-          {L.classic.nowSpeaking}
-        </div>
-
-        <h1
-          style={{
-            fontSize: fontSizes.display,
-            fontWeight: fontWeights.black,
-            margin: 0,
-            marginBottom: spacing.lg,
-            letterSpacing: '-0.02em',
-            lineHeight: 1.05,
-            color: colors.textPrimary,
-          }}
-        >
-          {currentSpeaker.name}
-        </h1>
-
-        <p
-          style={{
-            fontSize: fontSizes.bodyLg,
-            color: colors.textSecondary,
-            margin: 0,
-            marginBottom: spacing.xxl,
-            maxWidth: 320,
-            lineHeight: 1.4,
-            fontWeight: fontWeights.semibold,
-          }}
-        >
-          {L.classic.describeHint}
-        </p>
 
         <Button
-          variant="primary"
-          size="lg"
-          accentColor={accent}
-          shadowColor={accentShadow}
-          onClick={() => {
-            const nextSpeakerIdx = speakerIdx + 1
-            if (nextSpeakerIdx >= players.length) {
-              setPhase('decision')
-            } else {
-              setSpeakerIdx(nextSpeakerIdx)
-            }
-          }}
-          style={{ minWidth: 240 }}
+          variant="dashed"
+          size="sm"
+          fullWidth
+          onClick={() => setPhase('guess-handoff')}
         >
-          {speakerIdx === players.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
+          {L.classic.iAmImpostor}
         </Button>
       </div>
     )
