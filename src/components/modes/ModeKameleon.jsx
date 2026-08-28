@@ -266,7 +266,12 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
         <div
           key={currentSpeaker.id}
           className="anim-slide-right"
-          style={{ display: 'contents' }}
+          style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
         >
         <div
           style={{

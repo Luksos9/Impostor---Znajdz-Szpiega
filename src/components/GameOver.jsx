@@ -117,7 +117,7 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
             elevation="strong"
             padded="none"
             border="none"
-            className="anim-bounce anim-glow"
+            className="anim-bounce-glow"
             style={{
               border: `4px solid ${colors.success}`,
               boxShadow: `${tactileShadow(colors.successShadow)}, 0 18px 40px var(--shadow-strong)`,
@@ -125,7 +125,7 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
               display: 'flex',
               alignItems: 'baseline',
               justifyContent: 'space-between',
-              animationDelay: `${idx * 100}ms`,
+              '--bounce-delay': `${idx * 100}ms`,
             }}
           >
             <span
