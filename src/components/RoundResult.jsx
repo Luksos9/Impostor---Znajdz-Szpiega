@@ -149,7 +149,7 @@ export default function RoundResult({
               elevation="soft"
               padded="md"
               accent={isImp ? impostorColor : null}
-              className="anim-pop"
+              className="anim-bounce"
               style={{
                 display: 'flex',
                 alignItems: 'center',

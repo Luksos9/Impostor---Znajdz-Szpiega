@@ -9,6 +9,7 @@ import {
   tactileShadow,
 } from '../../styles/theme'
 import { hapticLight } from '../../utils/haptics'
+import { ensureAudioContext } from '../../utils/sounds'
 
 // Tactile button — the signature Duolingo two-tone press effect.
 //
@@ -137,7 +138,7 @@ export default function Button({
       <button
         type={type}
         className={className}
-        onClick={disabled ? undefined : (e) => { hapticLight(); onClick?.(e) }}
+        onClick={disabled ? undefined : (e) => { ensureAudioContext(); hapticLight(); onClick?.(e) }}
         disabled={disabled}
         aria-label={ariaLabel}
         style={baseStyle}
