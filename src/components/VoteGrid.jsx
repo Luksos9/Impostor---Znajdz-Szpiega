@@ -7,12 +7,14 @@ import { playSound } from '../utils/sounds'
 import { speak } from '../utils/voice'
 import { voteEntryLine } from '../utils/narration'
 import { useNudge } from '../utils/useNudge'
+import { useFocusHeading } from '../utils/useFocusHeading'
 
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote, disables all buttons, and calls onVote(targetId).
 // Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
 export default function VoteGrid({ players, voterId, voterName, onVote, accent }) {
   const [voted, setVoted] = useState(false)
+  const headingRef = useFocusHeading()
   useEffect(() => speak(voteEntryLine(), { delay: 300 }), [])
   useNudge(!voted, { after: 15000 })
   const candidates = players.filter((p) => p.id !== voterId)
@@ -57,6 +59,8 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
       </div>
 
       <h2
+        ref={headingRef}
+        tabIndex={-1}
         style={{
           fontSize: fontSizes.h2,
           fontWeight: fontWeights.black,
@@ -98,6 +102,8 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
             disabled={voted}
             onClick={() => handleVote(p.id)}
             style={{
+              // Same animation as .anim-stagger; the global reduced-motion rule
+              // in index.html now also covers inline animations like this one.
               animationName: 'fadeSlideUp',
               animationDuration: '360ms',
               animationTimingFunction: 'cubic-bezier(0.22,1,0.36,1)',
@@ -115,6 +121,7 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
 
       {voted && (
         <div
+          role="status"
           className="anim-bounce"
           style={{
             textAlign: 'center',

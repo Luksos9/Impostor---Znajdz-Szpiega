@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
@@ -29,26 +29,12 @@ const MODE_ID = 'pairsQuestion'
 // Kto ma inne pytanie?: write-and-reveal mode.
 // Flow: reveal question (private) → write answer (private) → reveal grid (public) → vote → result
 export default function ModePairsQuestion({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
-  // Refs keep impostor and content out of React DevTools state.
-  const impostorRef = useRef(null)
-  const contentRef = useRef(null)
-  const orderRef = useRef(null)
-
-  if (impostorRef.current === null) {
-    impostorRef.current = pickImpostor(players).id
-  }
-  if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, usedContentIds)
-    contentRef.current = picked.item
-  }
-  if (orderRef.current === null) {
-    // An impostor speaks first only ~5% of the time.
-    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
-  }
-
-  const impostorIds = [impostorRef.current]
-  const content = contentRef.current
-  const order = orderRef.current
+  // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
+  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
+  // An impostor speaks first only ~5% of the time.
+  const [order] = useState(() => makeSpeakerOrder(players, [impostorId]))
+  const impostorIds = [impostorId]
 
   const [phase, setPhase] = useState('reveal-handoff')
   const [revealIdx, setRevealIdx] = useState(0)
@@ -124,6 +110,7 @@ export default function ModePairsQuestion({ players, isLastRound, onRoundComplet
   if (phase === 'write-entry') {
     return (
       <PrivateInput
+        key={currentWriter.id}
         playerName={currentWriter.name}
         question={impostorIds.includes(currentWriter.id) ? content.impostor : content.common}
         prompt={L.pairsQuestion.writeAnswer}

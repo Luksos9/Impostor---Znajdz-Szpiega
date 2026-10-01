@@ -5,8 +5,6 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  radii,
-  shadows,
   colorForRole,
 } from '../styles/theme'
 import { L } from '../utils/labels'

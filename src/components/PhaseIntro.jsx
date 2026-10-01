@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { speak } from '../utils/voice'
+import { useFocusHeading } from '../utils/useFocusHeading'
 import Button from './ui/Button'
 
 // Bridge screen between phases. Used to tell players in plain Polish what's
@@ -24,6 +25,7 @@ export default function PhaseIntro({
   shadowColor,
   onContinue,
 }) {
+  const headingRef = useFocusHeading()
   // Read the intro aloud so nobody has to read the phone to the table.
   useEffect(() => speak([title, description].filter(Boolean).join('. ')), [title, description])
 
@@ -63,6 +65,8 @@ export default function PhaseIntro({
       )}
 
       <h1
+        ref={headingRef}
+        tabIndex={-1}
         style={{
           fontSize: fontSizes.h1,
           fontWeight: fontWeights.black,

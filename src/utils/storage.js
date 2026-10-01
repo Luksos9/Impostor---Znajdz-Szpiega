@@ -17,6 +17,7 @@ const baseSettings = {
   soundsEnabled: true,
   voiceEnabled: true,
   impostorCount: 1,
+  seenHowTo: false,
   // themeMode: 'light' | 'dark' — filled in by defaults()
 }
 

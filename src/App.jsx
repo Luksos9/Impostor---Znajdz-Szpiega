@@ -7,7 +7,6 @@ import Menu from './components/Menu'
 import QuickSetup from './components/QuickSetup'
 import ScoreboardHeader from './components/ScoreboardHeader'
 import GameOver from './components/GameOver'
-import ModeStub from './components/modes/ModeStub'
 import { getMode } from './data/modes'
 import { getContentForMode } from './data/packs'
 import { getSettings, saveSettings, saveNames } from './utils/storage'
@@ -18,8 +17,6 @@ import { isNative } from './utils/platform'
 
 // Top-level state machine.
 // Screens: 'menu' → 'setup' → 'playing' → 'gameover'
-// M2 scope: all shared components wired to a stub mode for verification.
-// M3 will replace ModeStub with ModeClassic.
 export default function App() {
   const [screen, setScreen] = useState('menu')
   const [selectedModeId, setSelectedModeId] = useState(null)
@@ -208,7 +205,7 @@ export default function App() {
   if (screen === 'playing' && game) {
     const isLastRound = game.currentRound >= game.totalRounds - 1
     const mode = getMode(game.modeId)
-    const ModeComp = mode?.Component || ModeStub
+    const ModeComp = mode?.Component
     return (
       <div
         style={{

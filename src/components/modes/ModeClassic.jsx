@@ -52,26 +52,12 @@ export default function ModeClassic({
   impostorCount = 1,
   usedContentIds = [],
 }) {
-  // Refs keep impostor identity and the secret out of React DevTools state.
-  const impostorRef = useRef(null)
-  const contentRef = useRef(null)
-  const orderRef = useRef(null)
-
-  if (impostorRef.current === null) {
-    impostorRef.current = pickImpostors(players, impostorCount)
-  }
-  if (contentRef.current === null) {
-    // usedContentIds keeps words from repeating within one game.
-    contentRef.current = pickContent(MODE_ID, usedContentIds).item
-  }
-  if (orderRef.current === null) {
-    // Impostors only rarely (~5%) get to speak first.
-    orderRef.current = makeSpeakerOrder(players, impostorRef.current)
-  }
-
-  const impostorIds = impostorRef.current
-  const content = contentRef.current
-  const speakerOrder = orderRef.current
+  // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
+  const [impostorIds] = useState(() => pickImpostors(players, impostorCount))
+  // usedContentIds keeps words from repeating within one game.
+  const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
+  // Impostors only rarely (~5%) get to speak first.
+  const [speakerOrder] = useState(() => makeSpeakerOrder(players, impostorIds))
 
   const [phase, setPhase] = useState('reveal-handoff')
   const [revealIdx, setRevealIdx] = useState(0)

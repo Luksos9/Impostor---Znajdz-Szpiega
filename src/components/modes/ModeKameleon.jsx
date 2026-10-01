@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
@@ -34,30 +34,17 @@ const MODE_ID = 'kameleon'
 // Kameleon: Chameleon-style grid mode.
 // Flow: public grid → secret reveal (private) → describe turns → decision → vote or grid guess → result
 export default function ModeKameleon({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
-  const impostorRef = useRef(null)
-  const contentRef = useRef(null)
-  const secretRef = useRef(null)
-  const orderRef = useRef(null)
-
-  if (impostorRef.current === null) {
-    impostorRef.current = pickImpostor(players).id
-  }
-  if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, usedContentIds)
-    contentRef.current = picked.item
-    // Pick a random word from the grid as the secret.
-    const words = picked.item?.words || []
-    secretRef.current = words[Math.floor(Math.random() * words.length)]
-  }
-  if (orderRef.current === null) {
-    // An impostor speaks first only ~5% of the time.
-    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
-  }
-
-  const impostorIds = [impostorRef.current]
-  const content = contentRef.current
-  const secret = secretRef.current
-  const order = orderRef.current
+  // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
+  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
+  // The secret is one random word from the public grid.
+  const [secret] = useState(() => {
+    const words = content?.words || []
+    return words[Math.floor(Math.random() * words.length)]
+  })
+  // An impostor speaks first only ~5% of the time.
+  const [order] = useState(() => makeSpeakerOrder(players, [impostorId]))
+  const impostorIds = [impostorId]
   const accent = colorForMode(MODE_ID)
   const accentShadow = colorForModeShadow(MODE_ID)
 

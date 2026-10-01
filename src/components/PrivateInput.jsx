@@ -12,8 +12,8 @@ import {
 import Button from './ui/Button'
 
 // Pass-and-play textarea. Used by Kto ma inne pytanie? for private answers.
-// Clears its internal state whenever `playerName` changes so the previous answer
-// never leaks to the next player.
+// Must be rendered with a per-player `key` so the previous answer never leaks
+// to the next player.
 //
 // Props:
 //   playerName:   string
@@ -37,12 +37,10 @@ export default function PrivateInput({
   const safeId = reactId.replace(/:/g, '')
   const taClass = `private-input-${safeId}`
 
-  // Reset when the player changes so we don't leak the previous answer.
+  // The parent gives this component a `key` per player, so the text state is
+  // fresh for each one (the previous answer can never leak). Just focus it.
   useEffect(() => {
-    setText('')
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    inputRef.current?.focus()
   }, [playerName])
 
   const canSubmit = text.trim().length > 0

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getVoiceStatus } from '../utils/voice'
+import { getSettings, saveSettings } from '../utils/storage'
+import HowToPlay from './HowToPlay'
+import InstallHint from './InstallHint'
 import {
   colors,
   fonts,
@@ -58,6 +61,32 @@ export default function Menu({
     }, 700)
     return () => clearInterval(timer)
   }, [])
+
+  // Rules: shown once on first launch, then from the "?" button.
+  const [howOpen, setHowOpen] = useState(() => !getSettings().seenHowTo)
+  const closeHow = () => {
+    saveSettings({ seenHowTo: true })
+    setHowOpen(false)
+  }
+
+  // Invite friends: native share sheet on phones, clipboard elsewhere.
+  const [shareNote, setShareNote] = useState('')
+  const share = async () => {
+    const url = window.location.origin
+    const data = { title: 'Impostor', text: 'Zagraj ze mną w Impostora — gra imprezowa na jeden telefon!', url }
+    try {
+      if (navigator.share) {
+        await navigator.share(data)
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setShareNote('Link skopiowany')
+    } catch (err) {
+      if (err?.name === 'AbortError') return // user closed the share sheet
+      setShareNote(url)
+    }
+    setTimeout(() => setShareNote(''), 2500)
+  }
 
   const ordered = MENU_ORDER
     .map((id) => MODE_REGISTRY.find((m) => m.id === id))
@@ -125,6 +154,27 @@ export default function Menu({
             {onToggleVoice && (
               <SettingToggle kind="voice" on={voiceEnabled} onToggle={onToggleVoice} />
             )}
+            <button
+              type="button"
+              onClick={() => setHowOpen(true)}
+              aria-label="Jak grać?"
+              title="Jak grać?"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                border: `2px solid ${colors.borderStrong}`,
+                background: colors.surface,
+                color: colors.textPrimary,
+                fontFamily: fonts.sans,
+                fontSize: fontSizes.bodyLg,
+                fontWeight: fontWeights.black,
+                cursor: 'pointer',
+                boxShadow: '0 4px 0 var(--shadow-tactile-neutral)',
+              }}
+            >
+              ?
+            </button>
           </div>
           {onToggleTheme && <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />}
         </div>
@@ -179,6 +229,8 @@ export default function Menu({
             {L.app.title}
           </h1>
         </header>
+
+        <InstallHint />
 
         {resume && (
           <div className="anim-bounce" style={{ marginBottom: spacing.lg }}>
@@ -238,9 +290,18 @@ export default function Menu({
           ))}
         </div>
 
+        <div style={{ marginTop: spacing.xl, textAlign: 'center' }}>
+          <Button variant="ghost" size="md" onClick={share}>
+            Zaproś znajomych
+          </Button>
+          <div role="status" style={{ minHeight: 20, fontSize: fontSizes.bodySm, color: colors.textSecondary, fontWeight: fontWeights.bold }}>
+            {shareNote}
+          </div>
+        </div>
+
         <div
           style={{
-            marginTop: spacing.xl,
+            marginTop: spacing.md,
             textAlign: 'center',
             fontSize: fontSizes.eyebrow,
             color: colors.textMuted,
@@ -250,6 +311,7 @@ export default function Menu({
           v{__APP_VERSION__}
         </div>
       </div>
+      {howOpen && <HowToPlay onClose={closeHow} />}
     </div>
   )
 }

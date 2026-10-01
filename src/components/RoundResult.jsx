@@ -16,6 +16,7 @@ import AnimatedNumber from './ui/AnimatedNumber'
 import { hapticSuccess, hapticHeavy } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
 import { speak } from '../utils/voice'
+import { useFocusHeading } from '../utils/useFocusHeading'
 import { pointsLine } from '../utils/narration'
 
 // Round result, told as a short story so nobody asks "wait, who won?":
@@ -65,6 +66,8 @@ export default function RoundResult({
   const bannerTitle = impostorsWon
     ? isChameleon ? 'Wygrywa kameleon' : plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
     : 'Wygrywają cywile'
+
+  const bannerRef = useFocusHeading()
 
   useEffect(() => {
     playSound(impostorsWon ? 'sneaky' : 'correct')
@@ -121,6 +124,7 @@ export default function RoundResult({
       >
         {/* 1. Who won */}
         <div
+          role="status"
           className="anim-bounce"
           style={{
             background: bannerColor,
@@ -134,6 +138,8 @@ export default function RoundResult({
           }}
         >
           <div
+            ref={bannerRef}
+            tabIndex={-1}
             style={{
               fontSize: fontSizes.h2,
               fontWeight: fontWeights.black,

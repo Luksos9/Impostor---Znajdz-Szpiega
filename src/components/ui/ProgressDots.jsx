@@ -1,29 +1,30 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { colors, spacing } from '../../styles/theme'
 
 // Segmented round progress: a row of small chunky dots.
 // Filled dots use the active accent + a thin tactile under-shadow.
-// The newly-completed dot pops once on the transition (driven by useRef
-// tracking the previous value, so re-renders don't retrigger the animation).
+// The newly-completed dot pops once on the transition (the previous value is
+// kept in state, so re-renders don't retrigger the animation).
 export default function ProgressDots({
   current = 0,
   total = 5,
   accentColor = colors.textPrimary,
   size = 'md',
 }) {
-  const prevRef = useRef(current)
+  // Pop the dot that just became active: compare with the previous prop during
+  // render (React's documented alternative to a set-state-in-effect), then clear
+  // the animation flag after it has played.
+  const [prev, setPrev] = useState(current)
   const [popIdx, setPopIdx] = useState(-1)
-
+  if (current !== prev) {
+    setPrev(current)
+    setPopIdx(current > prev ? current : -1)
+  }
   useEffect(() => {
-    if (current > prevRef.current) {
-      // Pop the dot that just became active.
-      setPopIdx(current)
-      const t = setTimeout(() => setPopIdx(-1), 500)
-      prevRef.current = current
-      return () => clearTimeout(t)
-    }
-    prevRef.current = current
-  }, [current])
+    if (popIdx < 0) return undefined
+    const t = setTimeout(() => setPopIdx(-1), 500)
+    return () => clearTimeout(t)
+  }, [popIdx])
 
   const sizes = {
     sm: { dot: 10, gap: spacing.xs, shadow: 2 },
