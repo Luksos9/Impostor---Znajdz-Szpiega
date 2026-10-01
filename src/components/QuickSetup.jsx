@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   colors,
   fonts,
@@ -51,11 +51,6 @@ export default function QuickSetup({
   const [roster, setRoster] = useState(() =>
     emptyRoster(Math.max(minPlayers, Math.min(8, savedNames.length || 5)), savedNames)
   )
-
-  // Keep roster sized to playerCount, preserving typed names.
-  useEffect(() => {
-    setRoster((current) => resizeRoster(current, playerCount))
-  }, [playerCount])
 
   // Impostor count can never exceed what the lobby allows.
   const impostorCap = multiImpostor ? maxImpostors(playerCount) : 1
@@ -170,6 +165,8 @@ export default function QuickSetup({
                   if (disabled) return
                   playSound('pop')
                   setPlayerCount(count)
+                  // Resize the roster right here, keeping the names already typed.
+                  setRoster((current) => resizeRoster(current, count))
                 }}
               />
             )
@@ -430,7 +427,7 @@ function NameInput({ index, total, value, accent, autoFocus, onChange, onEnter }
           transition: border-color 120ms ease, box-shadow 120ms ease;
         }
         .${className}::placeholder {
-          color: ${colors.textDim};
+          color: ${colors.textMuted};
           font-weight: ${fontWeights.semibold};
         }
         .${className}:focus {

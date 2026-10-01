@@ -12,8 +12,8 @@ import {
 import Button from './ui/Button'
 
 // Pass-and-play textarea. Used by Kto ma inne pytanie? for private answers.
-// Clears its internal state whenever `playerName` changes so the previous answer
-// never leaks to the next player.
+// Must be rendered with a per-player `key` so the previous answer never leaks
+// to the next player.
 //
 // Props:
 //   playerName:   string
@@ -25,6 +25,7 @@ import Button from './ui/Button'
 export default function PrivateInput({
   playerName,
   prompt,
+  question,
   placeholder,
   modeId,
   maxLength = 80,
@@ -36,12 +37,10 @@ export default function PrivateInput({
   const safeId = reactId.replace(/:/g, '')
   const taClass = `private-input-${safeId}`
 
-  // Reset when the player changes so we don't leak the previous answer.
+  // The parent gives this component a `key` per player, so the text state is
+  // fresh for each one (the previous answer can never leak). Just focus it.
   useEffect(() => {
-    setText('')
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    inputRef.current?.focus()
   }, [playerName])
 
   const canSubmit = text.trim().length > 0
@@ -106,6 +105,34 @@ export default function PrivateInput({
       >
         {playerName}
       </div>
+
+      {question && (
+        <div
+          style={{
+            background: colors.surface,
+            border: `2px solid ${accent}`,
+            borderRadius: radii.lg,
+            padding: `${spacing.md}px`,
+            marginBottom: spacing.lg,
+            fontSize: fontSizes.bodyLg,
+            fontWeight: fontWeights.extraBold,
+            lineHeight: 1.3,
+          }}
+        >
+          <div
+            style={{
+              fontSize: fontSizes.eyebrow,
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: colors.textMuted,
+              marginBottom: spacing.xs,
+            }}
+          >
+            Twoje pytanie
+          </div>
+          {question}
+        </div>
+      )}
 
       <h2
         style={{

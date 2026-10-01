@@ -7,6 +7,13 @@
     <meta name="theme-color" content="#181412" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Polska gra imprezowa na jeden telefon. Opisuj słowa, znajdź impostora, dobrze się baw." />
 
+    <!-- Link previews (Messenger, WhatsApp, iMessage) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Impostor — gra imprezowa na jeden telefon" />
+    <meta property="og:description" content="Opisuj słowa, znajdź impostora, dobrze się baw. Bez instalacji, na jednym telefonie." />
+    <meta property="og:locale" content="pl_PL" />
+    <meta name="twitter:card" content="summary" />
+
     <!-- PWA icons -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/pwa-192x192.png" type="image/png" sizes="192x192" />
@@ -19,9 +26,20 @@
     <meta name="mobile-web-app-capable" content="yes" />
 
     <title>Impostor — Gra imprezowa</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      /* Set the theme before first paint (saved choice, else the phone's setting)
+         so dark-mode phones never flash the light cream background. */
+      (function () {
+        try {
+          var t = null;
+          try { t = JSON.parse(localStorage.getItem('imposter.settings') || '{}').themeMode; } catch (e) {}
+          if (t !== 'dark' && t !== 'light') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
     <style>
       /* ─── Theme tokens as CSS variables ───
          Components import { colors } from styles/theme.js, where each value is
@@ -39,8 +57,8 @@
 
         --color-text-primary: #2B2B2B;
         --color-text-secondary:#6B6258;
-        --color-text-muted:   #A39C8E;
-        --color-text-dim:     #C9C2B3;
+        --color-text-muted:   #736B5F;
+        --color-text-dim:     #80786C;
 
         --color-overlay:      rgba(43, 43, 43, 0.55);
 
@@ -48,7 +66,7 @@
         --shadow-medium:      rgba(43, 43, 43, 0.10);
         --shadow-strong:      rgba(43, 43, 43, 0.18);
         --shadow-tactile-neutral: #C9C2B3;
-        --focus-ring:         rgba(43, 43, 43, 0.18);
+        --focus-ring:         rgba(43, 43, 43, 0.55);
 
         --illustration-bg:    #FFF8EC;
 
@@ -67,8 +85,8 @@
 
         --color-text-primary: #F5F0E5;
         --color-text-secondary:#B8B0A2;
-        --color-text-muted:   #8A8278;
-        --color-text-dim:     #5C5650;
+        --color-text-muted:   #9A9287;
+        --color-text-dim:     #8E867B;
 
         --color-overlay:      rgba(0, 0, 0, 0.7);
 
@@ -76,7 +94,7 @@
         --shadow-medium:      rgba(0, 0, 0, 0.45);
         --shadow-strong:      rgba(0, 0, 0, 0.6);
         --shadow-tactile-neutral: #000000;
-        --focus-ring:         rgba(255, 255, 255, 0.22);
+        --focus-ring:         rgba(255, 255, 255, 0.6);
 
         --illustration-bg:    #FFF8EC;
 
@@ -93,7 +111,7 @@
         min-height: 100%;
         background-color: var(--color-bg);
         color: var(--color-text-primary);
-        font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+        font-family: 'Nunito Variable', 'Nunito', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         overscroll-behavior-y: none;
@@ -190,7 +208,16 @@
         animation: confettiFall 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
       }
 
+      /* Headings we focus on screen change (for screen readers) need no ring. */
+      [tabindex="-1"]:focus { outline: none; }
+
       @media (prefers-reduced-motion: reduce) {
+        /* Also covers animations set inline (e.g. the vote buttons' stagger). */
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-delay: 0s !important;
+          animation-iteration-count: 1 !important;
+        }
         .anim-enter, .anim-fade, .anim-stagger, .anim-pop, .anim-bob,
         .anim-bounce, .anim-shake, .anim-glow, .anim-bounce-glow, .anim-slide-right,
         .anim-confetti { animation: none !important; }

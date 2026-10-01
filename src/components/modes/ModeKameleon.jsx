@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
@@ -18,12 +18,13 @@ import {
   colorForModeShadow,
 } from '../../styles/theme'
 import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
+import GuessConfirm from '../GuessConfirm'
+import { buildVoteSummary } from '../../utils/roundSummary'
+import { roundHeadline } from '../../utils/narration'
 import { pickContent } from '../../utils/content'
 import {
-  awardImpostorSurvival,
-  awardCorrectVoters,
   awardImpostorWordGuess,
-  impostorCaughtByMajority,
+  awardCivilians,
 } from '../../utils/scoring'
 import { L, t } from '../../utils/labels'
 
@@ -32,31 +33,18 @@ const MODE_ID = 'kameleon'
 
 // Kameleon: Chameleon-style grid mode.
 // Flow: public grid → secret reveal (private) → describe turns → decision → vote or grid guess → result
-export default function ModeKameleon({ players, roundIndex, isLastRound, onRoundComplete, usedContentIds = [] }) {
-  const impostorRef = useRef(null)
-  const contentRef = useRef(null)
-  const secretRef = useRef(null)
-  const orderRef = useRef(null)
-
-  if (impostorRef.current === null) {
-    impostorRef.current = pickImpostor(players).id
-  }
-  if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, usedContentIds)
-    contentRef.current = picked.item
-    // Pick a random word from the grid as the secret.
-    const words = picked.item?.words || []
-    secretRef.current = words[Math.floor(Math.random() * words.length)]
-  }
-  if (orderRef.current === null) {
-    // An impostor speaks first only ~5% of the time.
-    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
-  }
-
-  const impostorIds = [impostorRef.current]
-  const content = contentRef.current
-  const secret = secretRef.current
-  const order = orderRef.current
+export default function ModeKameleon({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
+  // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
+  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
+  // The secret is one random word from the public grid.
+  const [secret] = useState(() => {
+    const words = content?.words || []
+    return words[Math.floor(Math.random() * words.length)]
+  })
+  // An impostor speaks first only ~5% of the time.
+  const [order] = useState(() => makeSpeakerOrder(players, [impostorId]))
+  const impostorIds = [impostorId]
   const accent = colorForMode(MODE_ID)
   const accentShadow = colorForModeShadow(MODE_ID)
 
@@ -443,7 +431,7 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
           variant="dashed"
           size="md"
           fullWidth
-          onClick={() => setPhase('guess-grid')}
+          onClick={() => setPhase('guess-confirm')}
         >
           {L.kameleon.iAmChameleon}
         </Button>
@@ -484,6 +472,25 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   }
 
   // Chameleon picks a word from the public grid. Cells are pressable buttons here.
+  // A grid guess ends the round and any civilian who knows the secret could
+  // tap the right cell — so: confirm first, then an anonymous hand-off.
+  if (phase === 'guess-confirm') {
+    return (
+      <GuessConfirm
+        eyebrow="Strzał kameleona"
+        who="kameleon"
+        accent={accent}
+        shadowColor={accentShadow}
+        onConfirm={() => setPhase('guess-handoff')}
+        onBack={() => setPhase('decision')}
+      />
+    )
+  }
+
+  if (phase === 'guess-handoff') {
+    return <PrivacyHandoff playerName="Kameleon" onReady={() => setPhase('guess-grid')} />
+  }
+
   if (phase === 'guess-grid') {
     const guessCellClassName = 'kameleon-guess-cell'
     const guessCellCss = `
@@ -588,35 +595,44 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
             </button>
           ))}
         </div>
+        <Button variant="ghost" size="md" fullWidth onClick={() => setPhase('decision')}>
+          Wróć
+        </Button>
       </div>
     )
   }
 
   // Vote result: did majority catch the chameleon?
   if (phase === 'vote-result') {
-    const caught = impostorCaughtByMajority(votes, impostorIds)
-    let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-    let narrative
-    if (caught) {
-      deltas = awardCorrectVoters(deltas, votes, impostorIds, 1)
-      narrative = `${L.result.chameleonCaught} · Tajne słowo: ${secret}`
-    } else {
-      deltas = awardImpostorSurvival(deltas, impostorIds, 2)
-      narrative = `${L.result.chameleonEscaped} · Tajne słowo: ${secret}`
-    }
+    const { caught, deltas, facts, voteRows, impostorNames } = buildVoteSummary({
+      players,
+      votes,
+      impostorIds,
+      role: 'kameleon',
+    })
+    const headline = roundHeadline(caught ? 'caught' : 'escaped', {
+      impostorNames,
+      role: 'kameleon',
+    })
     return (
       <RoundResult
+        role="kameleon"
         impostorIds={impostorIds}
         players={players}
         deltas={deltas}
-        narrative={narrative}
+        winner={caught ? 'civilians' : 'impostors'}
+        headline={headline}
+        speech={`${headline} Tajne słowo: ${secret}.`}
+        secret={{ label: 'Tajne słowo', value: secret }}
+        facts={facts}
+        voteRows={voteRows}
         isLastRound={isLastRound}
         onNext={() =>
           onRoundComplete({
             modeId: MODE_ID,
             impostorIds,
             deltas,
-            summary: narrative,
+            summary: headline,
             usedContentId: content.id,
           })
         }
@@ -628,30 +644,39 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
   if (phase === 'result') {
     const correct = guessedWord === secret
     let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-    let narrative
     if (correct) {
       deltas = awardImpostorWordGuess(deltas, impostorIds, 3)
-      narrative = `${L.result.wordGuessCorrect} · Tajne słowo: ${secret}`
     } else {
-      // Wrong guess. Non-impostors each get +1 (chameleon outed themselves).
-      const nonImpostors = players.filter((p) => !impostorIds.includes(p.id))
-      const fakeVotes = Object.fromEntries(nonImpostors.map((p) => [p.id, impostorIds[0]]))
-      deltas = awardCorrectVoters(deltas, fakeVotes, impostorIds, 1)
-      narrative = `${L.result.wordGuessWrong} · Tajne słowo: ${secret} (strzał: ${guessedWord})`
+      deltas = awardCivilians(deltas, players.map((p) => p.id), impostorIds, 1)
     }
+    const headline = roundHeadline(correct ? 'guessRight' : 'guessWrong', {
+      word: secret,
+      role: 'kameleon',
+    })
+    const facts = [
+      `Kameleon wskazuje: „${guessedWord}”`,
+      correct
+        ? 'Kameleon dostaje +3 pkt za trafione słowo'
+        : 'Cywile dostają po +1 pkt za zdemaskowanie',
+    ]
     return (
       <RoundResult
+        role="kameleon"
         impostorIds={impostorIds}
         players={players}
         deltas={deltas}
-        narrative={narrative}
+        winner={correct ? 'impostors' : 'civilians'}
+        headline={headline}
+        speech={headline}
+        secret={{ label: 'Tajne słowo', value: secret }}
+        facts={facts}
         isLastRound={isLastRound}
         onNext={() =>
           onRoundComplete({
             modeId: MODE_ID,
             impostorIds,
             deltas,
-            summary: narrative,
+            summary: headline,
             usedContentId: content.id,
           })
         }

@@ -1,3 +1,8 @@
+import { useEffect, useState } from 'react'
+import { getVoiceStatus } from '../utils/voice'
+import { getSettings, saveSettings } from '../utils/storage'
+import HowToPlay from './HowToPlay'
+import InstallHint from './InstallHint'
 import {
   colors,
   fonts,
@@ -11,15 +16,16 @@ import { L } from '../utils/labels'
 import { MODE_REGISTRY } from '../data/modes'
 import ThemeToggle from './ui/ThemeToggle'
 import SettingToggle from './ui/SettingToggle'
+import Button from './ui/Button'
 
 // Iconic dark-navy badge illustrations hand-picked by the user. The dark
 // bleed edge blends into the card background so each tile reads as part of
-// the card rather than a pasted sticker. spy_in_town.png is staged on disk
-// for a future Szpieg mode — not yet wired into MODE_REGISTRY.
+// the card rather than a pasted sticker. WebP at ~2x display size (the
+// original 1 MB PNGs were being precached on first install).
 const MODE_IMAGES = {
-  classic: '/images/classic.png',
-  pairsQuestion: '/images/questions.png',
-  kameleon: '/images/kameleon.png',
+  classic: '/images/classic.webp',
+  pairsQuestion: '/images/questions.webp',
+  kameleon: '/images/kameleon.webp',
 }
 
 // Display order for the menu cards. Kept local to the Menu component because
@@ -42,7 +48,46 @@ export default function Menu({
   voiceEnabled = true,
   onToggleSounds,
   onToggleVoice,
+  resume = null,
+  onResume,
 }) {
+  // Voices load late on phones; re-check for a few seconds before judging.
+  const [voiceStatus, setVoiceStatus] = useState(() => getVoiceStatus())
+  useEffect(() => {
+    let tries = 0
+    const timer = setInterval(() => {
+      setVoiceStatus(getVoiceStatus())
+      if (++tries >= 8) clearInterval(timer)
+    }, 700)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Rules: shown once on first launch, then from the "?" button.
+  const [howOpen, setHowOpen] = useState(() => !getSettings().seenHowTo)
+  const closeHow = () => {
+    saveSettings({ seenHowTo: true })
+    setHowOpen(false)
+  }
+
+  // Invite friends: native share sheet on phones, clipboard elsewhere.
+  const [shareNote, setShareNote] = useState('')
+  const share = async () => {
+    const url = window.location.origin
+    const data = { title: 'Impostor', text: 'Zagraj ze mną w Impostora — gra imprezowa na jeden telefon!', url }
+    try {
+      if (navigator.share) {
+        await navigator.share(data)
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setShareNote('Link skopiowany')
+    } catch (err) {
+      if (err?.name === 'AbortError') return // user closed the share sheet
+      setShareNote(url)
+    }
+    setTimeout(() => setShareNote(''), 2500)
+  }
+
   const ordered = MENU_ORDER
     .map((id) => MODE_REGISTRY.find((m) => m.id === id))
     .filter(Boolean)
@@ -109,9 +154,50 @@ export default function Menu({
             {onToggleVoice && (
               <SettingToggle kind="voice" on={voiceEnabled} onToggle={onToggleVoice} />
             )}
+            <button
+              type="button"
+              onClick={() => setHowOpen(true)}
+              aria-label="Jak grać?"
+              title="Jak grać?"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                border: `2px solid ${colors.borderStrong}`,
+                background: colors.surface,
+                color: colors.textPrimary,
+                fontFamily: fonts.sans,
+                fontSize: fontSizes.bodyLg,
+                fontWeight: fontWeights.black,
+                cursor: 'pointer',
+                boxShadow: '0 4px 0 var(--shadow-tactile-neutral)',
+              }}
+            >
+              ?
+            </button>
           </div>
           {onToggleTheme && <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />}
         </div>
+
+        {voiceEnabled && voiceStatus === 'no-polish' && (
+          <div
+            role="note"
+            style={{
+              marginBottom: spacing.md,
+              padding: `${spacing.sm}px ${spacing.md}px`,
+              borderRadius: radii.md,
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+              fontSize: fontSizes.bodySm,
+              color: colors.textSecondary,
+              fontWeight: fontWeights.semibold,
+              lineHeight: 1.35,
+            }}
+          >
+            Ten telefon nie ma polskiego głosu, więc lektor może brzmieć dziwnie. Na iPhonie dodasz go w
+            Ustawienia → Dostępność → Treść czytana → Głosy.
+          </div>
+        )}
 
         <header
           style={{
@@ -144,6 +230,34 @@ export default function Menu({
           </h1>
         </header>
 
+        <InstallHint />
+
+        {resume && (
+          <div className="anim-bounce" style={{ marginBottom: spacing.lg }}>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              accentColor={colors.success}
+              shadowColor={colors.successShadow}
+              onClick={onResume}
+            >
+              Wznów grę · runda {resume.round}/{resume.total}
+            </Button>
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: spacing.xs,
+                fontSize: fontSizes.bodySm,
+                color: colors.textMuted,
+                fontWeight: fontWeights.bold,
+              }}
+            >
+              {resume.modeLabel} · wynik zachowany, runda zaczyna się od nowa
+            </div>
+          </div>
+        )}
+
         <div
           style={{
             fontSize: fontSizes.eyebrow,
@@ -175,7 +289,29 @@ export default function Menu({
             />
           ))}
         </div>
+
+        <div style={{ marginTop: spacing.xl, textAlign: 'center' }}>
+          <Button variant="ghost" size="md" onClick={share}>
+            Zaproś znajomych
+          </Button>
+          <div role="status" style={{ minHeight: 20, fontSize: fontSizes.bodySm, color: colors.textSecondary, fontWeight: fontWeights.bold }}>
+            {shareNote}
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: spacing.md,
+            textAlign: 'center',
+            fontSize: fontSizes.eyebrow,
+            color: colors.textMuted,
+            fontWeight: fontWeights.bold,
+          }}
+        >
+          v{__APP_VERSION__}
+        </div>
       </div>
+      {howOpen && <HowToPlay onClose={closeHow} />}
     </div>
   )
 }

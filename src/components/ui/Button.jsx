@@ -19,7 +19,7 @@ import { ensureAudioContext, playSound } from '../../utils/sounds'
 //   ghost      → transparent, no shadow (back / cancel)
 //   dashed     → transparent, 2px dashed accent border (opt-out actions)
 //
-// Sizes (minHeight): sm 36, md 48, lg 56, hero 72
+// Sizes (minHeight): sm 44, md 48, lg 56, hero 72
 //
 // The :active press effect is impossible via inline styles, so we inject a
 // scoped <style> block per instance with a generated className.
@@ -48,7 +48,7 @@ export default function Button({
   const undershadow = shadowColor || 'var(--shadow-tactile-neutral)'
 
   const sizes = {
-    sm: { minH: 36, padY: spacing.xs, padX: spacing.md, fs: fontSizes.bodySm, weight: fontWeights.bold,    radius: radii.lg },
+    sm: { minH: 44, padY: spacing.xs, padX: spacing.md, fs: fontSizes.bodySm, weight: fontWeights.bold,    radius: radii.lg },
     md: { minH: 48, padY: spacing.sm, padX: spacing.lg, fs: fontSizes.body,   weight: fontWeights.extraBold, radius: radii.lg },
     lg: { minH: 56, padY: spacing.md, padX: spacing.lg, fs: fontSizes.h3,     weight: fontWeights.extraBold, radius: radii.xl },
     hero: { minH: 72, padY: spacing.lg, padX: spacing.xl, fs: fontSizes.h2,    weight: fontWeights.black,    radius: radii.xxl },

@@ -13,6 +13,7 @@ import { L } from '../utils/labels'
 import Button from './ui/Button'
 import Card from './ui/Card'
 import ProgressDots from './ui/ProgressDots'
+import SettingsSheet from './SettingsSheet'
 
 // Persistent strip at the top of every in-game screen.
 // Shows a ProgressDots round indicator, each player as a chip with their score,
@@ -24,8 +25,12 @@ export default function ScoreboardHeader({
   totalRounds,
   modeId,
   onQuit,
+  settings,
+  onToggleSetting,
+  onToggleTheme,
 }) {
   const [confirming, setConfirming] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const accent = colorForMode(modeId)
 
   return (
@@ -51,6 +56,37 @@ export default function ScoreboardHeader({
           accentColor={accent}
           size="sm"
         />
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+        {settings && (
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Ustawienia"
+            title="Ustawienia"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              border: `2px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textSecondary,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="17" x2="20" y2="17" />
+              <circle cx="9" cy="7" r="2" fill="currentColor" />
+              <circle cx="15" cy="12" r="2" fill="currentColor" />
+              <circle cx="8" cy="17" r="2" fill="currentColor" />
+            </svg>
+          </button>
+        )}
         <Button
           variant="secondary"
           size="sm"
@@ -64,6 +100,7 @@ export default function ScoreboardHeader({
         >
           {L.scoreboard.quit}
         </Button>
+        </div>
       </div>
 
       <div
@@ -117,6 +154,18 @@ export default function ScoreboardHeader({
           )
         })}
       </div>
+
+      {settingsOpen && settings && (
+        <SettingsSheet
+          soundsEnabled={settings.soundsEnabled}
+          voiceEnabled={settings.voiceEnabled}
+          themeMode={settings.themeMode}
+          onToggleSounds={() => onToggleSetting('soundsEnabled')}
+          onToggleVoice={() => onToggleSetting('voiceEnabled')}
+          onToggleTheme={onToggleTheme}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
 
       {confirming && (
         <div

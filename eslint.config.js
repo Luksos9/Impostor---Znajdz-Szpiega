@@ -15,7 +15,7 @@ export default defineConfig([
     ],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: { ...globals.browser, __APP_VERSION__: 'readonly' },
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
@@ -25,5 +25,10 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
+  },
+  {
+    // Build tooling runs in Node, not the browser: allow process, Buffer, etc.
+    files: ['vite.config.js', 'eslint.config.js', 'scripts/**/*.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

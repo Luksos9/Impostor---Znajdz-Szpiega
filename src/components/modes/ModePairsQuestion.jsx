@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import PrivacyHandoff from '../PrivacyHandoff'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
 import PrivateInput from '../PrivateInput'
+import { buildVoteSummary } from '../../utils/roundSummary'
+import { roundHeadline } from '../../utils/narration'
 import VoteGrid from '../VoteGrid'
 import RoundResult from '../RoundResult'
 import Button from '../ui/Button'
@@ -19,9 +21,6 @@ import {
 import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
-  awardImpostorSurvival,
-  awardCorrectVoters,
-  impostorCaughtByMajority,
 } from '../../utils/scoring'
 import { L } from '../../utils/labels'
 
@@ -29,27 +28,13 @@ const MODE_ID = 'pairsQuestion'
 
 // Kto ma inne pytanie?: write-and-reveal mode.
 // Flow: reveal question (private) → write answer (private) → reveal grid (public) → vote → result
-export default function ModePairsQuestion({ players, roundIndex, isLastRound, onRoundComplete, usedContentIds = [] }) {
-  // Refs keep impostor and content out of React DevTools state.
-  const impostorRef = useRef(null)
-  const contentRef = useRef(null)
-  const orderRef = useRef(null)
-
-  if (impostorRef.current === null) {
-    impostorRef.current = pickImpostor(players).id
-  }
-  if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, usedContentIds)
-    contentRef.current = picked.item
-  }
-  if (orderRef.current === null) {
-    // An impostor speaks first only ~5% of the time.
-    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
-  }
-
-  const impostorIds = [impostorRef.current]
-  const content = contentRef.current
-  const order = orderRef.current
+export default function ModePairsQuestion({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
+  // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
+  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
+  // An impostor speaks first only ~5% of the time.
+  const [order] = useState(() => makeSpeakerOrder(players, [impostorId]))
+  const impostorIds = [impostorId]
 
   const [phase, setPhase] = useState('reveal-handoff')
   const [revealIdx, setRevealIdx] = useState(0)
@@ -125,7 +110,9 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
   if (phase === 'write-entry') {
     return (
       <PrivateInput
+        key={currentWriter.id}
         playerName={currentWriter.name}
+        question={impostorIds.includes(currentWriter.id) ? content.impostor : content.common}
         prompt={L.pairsQuestion.writeAnswer}
         placeholder={L.pairsQuestion.answerPlaceholder}
         modeId={MODE_ID}
@@ -307,29 +294,33 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
 
   // Result
   if (phase === 'result') {
-    const caught = impostorCaughtByMajority(votes, impostorIds)
-    let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-    let narrative
-    if (caught) {
-      deltas = awardCorrectVoters(deltas, votes, impostorIds, 1)
-      narrative = `${L.result.impostorCaught} · Inne pytanie: ${content.impostor}`
-    } else {
-      deltas = awardImpostorSurvival(deltas, impostorIds, 2)
-      narrative = `${L.result.impostorEscaped} · Inne pytanie: ${content.impostor}`
-    }
+    const { caught, deltas, facts, voteRows, impostorNames } = buildVoteSummary({
+      players,
+      votes,
+      impostorIds,
+    })
+    const headline = roundHeadline(caught ? 'caught' : 'escaped', { impostorNames })
+    const questionFacts = [
+      `Wspólne pytanie: ${content.common}`,
+      `Pytanie impostora: ${content.impostor}`,
+    ]
     return (
       <RoundResult
         impostorIds={impostorIds}
         players={players}
         deltas={deltas}
-        narrative={narrative}
+        winner={caught ? 'civilians' : 'impostors'}
+        headline={headline}
+        speech={`${headline} Impostor dostał inne pytanie.`}
+        facts={[...questionFacts, ...facts]}
+        voteRows={voteRows}
         isLastRound={isLastRound}
         onNext={() =>
           onRoundComplete({
             modeId: MODE_ID,
             impostorIds,
             deltas,
-            summary: narrative,
+            summary: headline,
             usedContentId: content.id,
           })
         }

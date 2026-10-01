@@ -16,6 +16,7 @@ import AnimatedNumber from './ui/AnimatedNumber'
 import { hapticSuccess, hapticHeavy } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
 import { speak } from '../utils/voice'
+import { useFocusHeading } from '../utils/useFocusHeading'
 import { pointsLine } from '../utils/narration'
 
 // Round result, told as a short story so nobody asks "wait, who won?":
@@ -48,6 +49,7 @@ export default function RoundResult({
   voteRows,
   isLastRound,
   onNext,
+  role = 'impostor',
 }) {
   const impostors = players.filter((p) => impostorIds.includes(p.id))
   const impostorColor = colorForRole('impostor')
@@ -60,9 +62,12 @@ export default function RoundResult({
   const verdict = headline || narrative
   const bannerColor = impostorsWon ? colors.danger : colors.success
   const bannerShadow = impostorsWon ? colors.dangerShadow : colors.successShadow
+  const isChameleon = role === 'kameleon'
   const bannerTitle = impostorsWon
-    ? plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
+    ? isChameleon ? 'Wygrywa kameleon' : plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
     : 'Wygrywają cywile'
+
+  const bannerRef = useFocusHeading()
 
   useEffect(() => {
     playSound(impostorsWon ? 'sneaky' : 'correct')
@@ -119,6 +124,7 @@ export default function RoundResult({
       >
         {/* 1. Who won */}
         <div
+          role="status"
           className="anim-bounce"
           style={{
             background: bannerColor,
@@ -132,6 +138,8 @@ export default function RoundResult({
           }}
         >
           <div
+            ref={bannerRef}
+            tabIndex={-1}
             style={{
               fontSize: fontSizes.h2,
               fontWeight: fontWeights.black,
@@ -178,7 +186,7 @@ export default function RoundResult({
         )}
 
         {/* 3. Who the impostors were */}
-        {eyebrow(plural ? 'Impostorami byli' : L.result.impostorWas, impostorColor)}
+        {eyebrow(isChameleon ? L.result.chameleonWas : plural ? 'Impostorami byli' : L.result.impostorWas, impostorColor)}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
           {impostors.map((p) => (
             <div
@@ -330,7 +338,7 @@ export default function RoundResult({
                         color: impostorColor,
                       }}
                     >
-                      impostor
+                      {isChameleon ? 'kameleon' : 'impostor'}
                     </span>
                   )}
                 </div>

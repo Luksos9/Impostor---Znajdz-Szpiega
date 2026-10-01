@@ -71,7 +71,7 @@ export const colors = {
 }
 
 export const fonts = {
-  sans: "'Nunito', system-ui, -apple-system, sans-serif",
+  sans: "'Nunito Variable', 'Nunito', system-ui, -apple-system, sans-serif",
 }
 
 export const fontSizes = {

@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
+import ErrorBoundary from './components/ErrorBoundary'
+import { useWakeLock } from './utils/useWakeLock'
+import { saveSession, clearSession, loadSession } from './utils/session'
+import { applyUpdate, isUpdateReady, onUpdateReady } from './utils/updater'
 import Menu from './components/Menu'
 import QuickSetup from './components/QuickSetup'
 import ScoreboardHeader from './components/ScoreboardHeader'
 import GameOver from './components/GameOver'
-import ModeStub from './components/modes/ModeStub'
 import { getMode } from './data/modes'
+import { getContentForMode } from './data/packs'
 import { getSettings, saveSettings, saveNames } from './utils/storage'
 import { stopSpeaking } from './utils/voice'
 import { applyDeltas } from './utils/scoring'
@@ -13,14 +17,25 @@ import { isNative } from './utils/platform'
 
 // Top-level state machine.
 // Screens: 'menu' → 'setup' → 'playing' → 'gameover'
-// M2 scope: all shared components wired to a stub mode for verification.
-// M3 will replace ModeStub with ModeClassic.
 export default function App() {
   const [screen, setScreen] = useState('menu')
   const [selectedModeId, setSelectedModeId] = useState(null)
   const [players, setPlayers] = useState([])
   const [settings, setSettings] = useState(() => getSettings())
   const [game, setGame] = useState(null)
+  // An unfinished game from before iOS killed/reloaded the app (see utils/session.js).
+  const [session, setSession] = useState(() => loadSession())
+  const [retryKey, setRetryKey] = useState(0)
+  const [updateReady, setUpdateReady] = useState(() => isUpdateReady())
+
+  // Keep the screen awake during play — the phone sits on the table between turns.
+  useWakeLock(screen === 'playing')
+
+  // A new app version is applied only when idle on the menu, never mid-round.
+  useEffect(() => onUpdateReady(setUpdateReady), [])
+  useEffect(() => {
+    if (updateReady && screen === 'menu') applyUpdate()
+  }, [updateReady, screen])
 
   // Apply the persisted theme on mount and whenever it changes.
   // Theme tokens are CSS variables keyed off [data-theme] on <html>.
@@ -28,8 +43,9 @@ export default function App() {
     const mode = settings.themeMode === 'dark' ? 'dark' : 'light'
     document.documentElement.dataset.theme = mode
     // Keep the iOS status bar / browser chrome in sync with the new bg.
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) =>
+      meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+    )
 
     // Native: sync the Android/iOS status bar color and style.
     if (isNative) {
@@ -60,19 +76,43 @@ export default function App() {
     setScreen('setup')
   }
 
-  const quitToMenu = () => {
+  // Back to the menu after an error: keep the saved game so it can be resumed.
+  const leaveAfterError = () => {
     stopSpeaking()
+    setSession(loadSession())
     setScreen('menu')
     setSelectedModeId(null)
     setPlayers([])
     setGame(null)
   }
 
-  const startGame = (roster, totalRounds, impostorCount = 1) => {
+  const resumeGame = () => {
+    if (!session) return
+    setSelectedModeId(session.modeId)
+    setPlayers(session.players)
+    setGame(session.game)
+    setSession(null)
+    setScreen('playing')
+  }
+
+  const quitToMenu = () => {
+    stopSpeaking()
+    clearSession()
+    setSession(null)
+    setScreen('menu')
+    setSelectedModeId(null)
+    setPlayers([])
+    setGame(null)
+  }
+
+  const startGame = (roster, totalRounds, impostorCount = 1, carriedUsedIds = []) => {
     setPlayers(roster)
-    const nextSettings = { ...settings, totalRounds, impostorCount }
-    setSettings(nextSettings)
-    saveSettings({ totalRounds, impostorCount })
+    // Only remember the impostor count for modes that let you choose it, so
+    // playing Kameleon doesn't silently reset Classic's setting to 1.
+    const remembersImpostors = !!getMode(selectedModeId)?.multiImpostor
+    const patch = remembersImpostors ? { totalRounds, impostorCount } : { totalRounds }
+    setSettings({ ...settings, ...patch })
+    saveSettings(patch)
     saveNames(roster.map((p) => p.name))
 
     const initialGame = {
@@ -81,43 +121,36 @@ export default function App() {
       totalRounds,
       impostorCount,
       scores: Object.fromEntries(roster.map((p) => [p.id, 0])),
-      usedContentIds: [],
+      usedContentIds: carriedUsedIds,
       history: [],
     }
     setGame(initialGame)
-
-    console.log('[imposter] startGame', {
-      modeId: selectedModeId,
-      players: roster,
-      totalRounds,
-      settings: nextSettings,
-    })
-
+    saveSession({ modeId: selectedModeId, players: roster, game: initialGame })
     setScreen('playing')
   }
 
+  // Called by a mode when its round is over. Pure state update, then (after the
+  // last round) straight to the final screen — no deferred side effect, so the
+  // next round never flashes up for a frame.
   const finishRound = (result) => {
-    setGame((prev) => {
-      if (!prev) return prev
-      const nextScores = applyDeltas(prev.scores, result.deltas)
-      const nextRound = prev.currentRound + 1
-      const nextUsed = result.usedContentId
-        ? [...prev.usedContentIds, result.usedContentId]
-        : prev.usedContentIds
-      const nextHistory = [...prev.history, result]
-      const next = {
-        ...prev,
-        scores: nextScores,
-        currentRound: nextRound,
-        usedContentIds: nextUsed,
-        history: nextHistory,
-      }
-      if (nextRound >= prev.totalRounds) {
-        // Defer the screen transition so React commits the final scores first.
-        setTimeout(() => setScreen('gameover'), 0)
-      }
-      return next
-    })
+    if (!game) return
+    const nextRound = game.currentRound + 1
+    const nextGame = {
+      ...game,
+      scores: applyDeltas(game.scores, result.deltas),
+      currentRound: nextRound,
+      usedContentIds: result.usedContentId
+        ? [...game.usedContentIds, result.usedContentId]
+        : game.usedContentIds,
+      history: [...game.history, result],
+    }
+    setGame(nextGame)
+    if (nextRound >= game.totalRounds) {
+      clearSession()
+      setScreen('gameover')
+    } else {
+      saveSession({ modeId: game.modeId, players, game: nextGame })
+    }
   }
 
   const restartGame = () => {
@@ -125,7 +158,12 @@ export default function App() {
       quitToMenu()
       return
     }
-    startGame(players, settings.totalRounds, game?.impostorCount || settings.impostorCount)
+    // Carry the used words into the next game so a rematch doesn't replay them —
+    // unless that would leave too few fresh ones for the whole game.
+    const pool = getContentForMode(selectedModeId).length
+    const used = game?.usedContentIds || []
+    const carry = pool - used.length >= settings.totalRounds ? used : []
+    startGame(players, settings.totalRounds, game?.impostorCount || 1, carry)
   }
 
   if (screen === 'menu') {
@@ -138,6 +176,16 @@ export default function App() {
         voiceEnabled={settings.voiceEnabled}
         onToggleSounds={() => toggleSetting('soundsEnabled')}
         onToggleVoice={() => toggleSetting('voiceEnabled')}
+        resume={
+          session
+            ? {
+                modeLabel: getMode(session.modeId)?.label,
+                round: session.game.currentRound + 1,
+                total: session.game.totalRounds,
+              }
+            : null
+        }
+        onResume={resumeGame}
       />
     )
   }
@@ -157,7 +205,7 @@ export default function App() {
   if (screen === 'playing' && game) {
     const isLastRound = game.currentRound >= game.totalRounds - 1
     const mode = getMode(game.modeId)
-    const ModeComp = mode?.Component || ModeStub
+    const ModeComp = mode?.Component
     return (
       <div
         style={{
@@ -174,6 +222,9 @@ export default function App() {
           totalRounds={game.totalRounds}
           modeId={game.modeId}
           onQuit={quitToMenu}
+          settings={settings}
+          onToggleSetting={toggleSetting}
+          onToggleTheme={toggleTheme}
         />
         <div
           style={{
@@ -187,8 +238,12 @@ export default function App() {
             margin: '0 auto',
           }}
         >
+          <ErrorBoundary
+            title="Ta runda się wysypała"
+            onReset={(action) => (action === 'retry' ? setRetryKey((k) => k + 1) : leaveAfterError())}
+          >
           <ModeComp
-            key={`${game.modeId}-${game.currentRound}`}
+            key={`${game.modeId}-${game.currentRound}-${retryKey}`}
             players={players}
             settings={settings}
             roundIndex={game.currentRound}
@@ -198,6 +253,7 @@ export default function App() {
             onRoundComplete={finishRound}
             onQuit={quitToMenu}
           />
+          </ErrorBoundary>
         </div>
       </div>
     )

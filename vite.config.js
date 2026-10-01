@@ -1,19 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
 
 // https://vite.dev/config/
+// Shown in the menu footer so friends can tell which version they are on.
+const APP_VERSION = `${pkg.version}${
+  process.env.VERCEL_GIT_COMMIT_SHA ? ` · ${process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)}` : ''
+}`
+
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(APP_VERSION) },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new service worker waits until the app applies it (on the menu).
+      registerType: 'prompt',
       includeAssets: [
         'favicon.ico',
         'apple-touch-icon-180x180.png',
-        'images/classic.png',
-        'images/questions.png',
-        'images/kameleon.png',
+        'images/classic.webp',
+        'images/questions.webp',
+        'images/kameleon.webp',
       ],
       manifest: {
         name: 'Impostor — Gra imprezowa',
@@ -54,11 +64,9 @@ export default defineConfig({
       },
       workbox: {
         // Cache everything so the game works fully offline after first visit.
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,ico,woff2}'],
-        // Let the SW kick in immediately on updates so users don't get stuck
-        // on an old version after a redeploy.
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,ico,woff2}'],
+        // No skipWaiting: the app activates updates itself, when it is idle.
         clientsClaim: true,
-        skipWaiting: true,
       },
       devOptions: {
         // Enable the plugin during `vite dev` to test install flow locally.
