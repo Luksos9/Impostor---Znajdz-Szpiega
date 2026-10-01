@@ -178,6 +178,14 @@ export function voteEntryLine() {
   ])
 }
 
+export function guessConfirmLine() {
+  return pick([
+    'Ktoś chce zgadywać? To kończy rundę. Na pewno?',
+    'Strzał impostora kończy rundę. Jesteście pewni?',
+    'Uwaga! Zgadywanie kończy rundę. Na pewno?',
+  ])
+}
+
 export function guessEntryLine() {
   return pick([
     'Impostor zgaduje słowo. Reszta, ani pary z ust.',
@@ -227,9 +235,9 @@ export function gameOverLine(winners, topScore, runnersUp = [], runnerScore = 0)
 //   escaped       – the table voted wrong / split
 //   guessRight    – impostor guessed the secret word
 //   guessWrong    – impostor tried and failed
-export function roundHeadline(kind, { impostorNames = [], word = '', plural = false } = {}) {
+export function roundHeadline(kind, { impostorNames = [], word = '', plural = false, role = 'impostor' } = {}) {
   const names = joinNames(impostorNames)
-  const vars = { names, word }
+  const vars = { names, word, win: plural ? 'Impostorzy wygrywają.' : 'Impostor wygrywa.' }
   const T = {
     caught: plural
       ? [
@@ -255,15 +263,21 @@ export function roundHeadline(kind, { impostorNames = [], word = '', plural = fa
           'Cywile głosują, a {names} ucieka bez szwanku.',
         ],
     guessRight: [
-      '{names} trafia w słowo: {word}! Impostor wygrywa.',
-      'Ale jazda! {names} zgaduje: {word}. Dobry nos.',
-      '{word}! {names} wyczuwa temat jak pies tropiący.',
+      'Impostor trafia w słowo: {word}! {win}',
+      'Ale jazda! Impostor zgaduje: {word}. Dobry nos.',
+      '{word}! Impostor wyczuwa temat jak pies tropiący.',
     ],
     guessWrong: [
-      '{names} strzela i pudłuje. Słowo to: {word}. Cywile wygrywają.',
-      'Nie tym razem, {names}. Szukane słowo: {word}.',
+      'Impostor strzela i pudłuje. Słowo to: {word}. Cywile wygrywają.',
+      'Nie tym razem, impostorze. Szukane słowo: {word}.',
       'Pudło! Słowo brzmi: {word}. Impostor chyba zgaduje z sufitu.',
     ],
   }
-  return fill(pick(T[kind] || T.escaped), vars)
+  const line = fill(pick(T[kind] || T.escaped), vars)
+  if (role !== 'kameleon') return line
+  // Kameleon mode: same jokes, the odd one out is called "kameleon".
+  return line
+    .replace(/impostorze/g, 'kameleonie')
+    .replace(/Impostor/g, 'Kameleon')
+    .replace(/impostor/g, 'kameleon')
 }

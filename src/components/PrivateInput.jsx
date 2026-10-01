@@ -25,6 +25,7 @@ import Button from './ui/Button'
 export default function PrivateInput({
   playerName,
   prompt,
+  question,
   placeholder,
   modeId,
   maxLength = 80,
@@ -106,6 +107,34 @@ export default function PrivateInput({
       >
         {playerName}
       </div>
+
+      {question && (
+        <div
+          style={{
+            background: colors.surface,
+            border: `2px solid ${accent}`,
+            borderRadius: radii.lg,
+            padding: `${spacing.md}px`,
+            marginBottom: spacing.lg,
+            fontSize: fontSizes.bodyLg,
+            fontWeight: fontWeights.extraBold,
+            lineHeight: 1.3,
+          }}
+        >
+          <div
+            style={{
+              fontSize: fontSizes.eyebrow,
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: colors.textMuted,
+              marginBottom: spacing.xs,
+            }}
+          >
+            Twoje pytanie
+          </div>
+          {question}
+        </div>
+      )}
 
       <h2
         style={{

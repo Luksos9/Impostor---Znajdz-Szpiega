@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { hapticHeavy } from '../../utils/haptics'
-import { playSound } from '../../utils/sounds'
 import PrivacyHandoff from '../PrivacyHandoff'
+import GuessConfirm from '../GuessConfirm'
 import CardReveal from '../CardReveal'
 import PhaseIntro from '../PhaseIntro'
 import VoteGrid from '../VoteGrid'
@@ -20,12 +20,9 @@ import {
 import { pickImpostors, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
-  awardImpostorSurvival,
-  awardCorrectVoters,
   awardImpostorWordGuess,
-  impostorCaughtByMajority,
   compareWordGuess,
-  tallyVotes,
+  awardCivilians,
 } from '../../utils/scoring'
 import { speak } from '../../utils/voice'
 import {
@@ -39,6 +36,7 @@ import {
   guessEntryLine,
 } from '../../utils/narration'
 import { useNudge } from '../../utils/useNudge'
+import { buildVoteSummary } from '../../utils/roundSummary'
 import { L, t } from '../../utils/labels'
 
 const MAX_TURNS = 3
@@ -82,8 +80,8 @@ export default function ModeClassic({
   const [voteIdx, setVoteIdx] = useState(0)
   const [votes, setVotes] = useState({})
   const [guessText, setGuessText] = useState('')
-  const [guesserId, setGuesserId] = useState(null)
-  const [wrongPick, setWrongPick] = useState(null)
+  // Where "Wróć" goes if the table backs out of an impostor guess.
+  const guessReturnRef = useRef('decision')
 
   const reactId = useId()
   const safeId = reactId.replace(/:/g, '')
@@ -104,7 +102,7 @@ export default function ModeClassic({
       return speak(`${prefix}${speakerLine(speaker.name)} ${speakerQuip()}`.trim())
     }
     if (phase === 'decision') return speak(decisionLine())
-    if (phase === 'guess-entry') return speak(guessEntryLine())
+      if (phase === 'guess-entry') return speak(guessEntryLine())
     return undefined
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, speakerIdx, turn])
@@ -112,16 +110,14 @@ export default function ModeClassic({
   // Poke slow speakers and slow deciders.
   useNudge(phase === 'describe' || phase === 'decision', { after: 20000, every: 15000 })
 
-  // One impostor guesses straight away; with several we first ask who is guessing.
+  // An impostor guess ends the round, so the table confirms it first. The
+  // hand-off afterwards is deliberately anonymous: naming the impostor on a
+  // screen everyone can see would give them away.
   const startGuess = () => {
-    setWrongPick(null)
-    if (impostorIds.length > 1) {
-      setPhase('guess-who')
-    } else {
-      setGuesserId(impostorIds[0])
-      setPhase('guess-handoff')
-    }
+    guessReturnRef.current = phase === 'describe' ? 'describe' : 'decision'
+    setPhase('guess-confirm')
   }
+  const backFromGuess = () => setPhase(guessReturnRef.current)
 
   // Reveal loop
   if (phase === 'reveal-handoff') {
@@ -427,114 +423,20 @@ export default function ModeClassic({
   }
 
   // Impostor guess handoff → guess form.
-  // Several impostors: whoever wants to guess taps their own name.
-  // Tapping a civilian's name is rejected (with a shake), so nothing leaks
-  // except what the guesser announces anyway.
-  if (phase === 'guess-who') {
+  if (phase === 'guess-confirm') {
     return (
-      <div
-        className="anim-enter"
-        style={{
-          flex: 1,
-          minHeight: 0,
-          background: colors.bg,
-          color: colors.textPrimary,
-          fontFamily: fonts.sans,
-          display: 'flex',
-          flexDirection: 'column',
-          paddingTop: spacing.xl,
-          paddingBottom: spacing.xl + 8,
-          paddingLeft: spacing.lg,
-          paddingRight: spacing.lg,
-        }}
-      >
-        <div
-          style={{
-            fontSize: fontSizes.eyebrow,
-            fontWeight: fontWeights.extraBold,
-            textTransform: 'uppercase',
-            letterSpacing: '0.14em',
-            color: accent,
-            marginBottom: spacing.sm,
-          }}
-        >
-          Impostor
-        </div>
-        <h2
-          style={{
-            fontSize: fontSizes.h2,
-            fontWeight: fontWeights.black,
-            margin: 0,
-            marginBottom: spacing.sm,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Kto zgaduje słowo?
-        </h2>
-        <p
-          style={{
-            fontSize: fontSizes.body,
-            color: colors.textSecondary,
-            margin: 0,
-            marginBottom: spacing.lg,
-            fontWeight: fontWeights.semibold,
-          }}
-        >
-          Stuknij swoje imię, impostorze.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-          {players.map((p) => (
-            <Button
-              key={p.id}
-              variant="secondary"
-              size="lg"
-              accentColor={accent}
-              fullWidth
-              onClick={() => {
-                if (impostorIds.includes(p.id)) {
-                  setGuesserId(p.id)
-                  setPhase('guess-handoff')
-                } else {
-                  playSound('wrong')
-                  setWrongPick({ name: p.name, n: (wrongPick?.n || 0) + 1 })
-                }
-              }}
-            >
-              {p.name}
-            </Button>
-          ))}
-        </div>
-        <div style={{ minHeight: 28, marginTop: spacing.md, textAlign: 'center' }}>
-          {wrongPick && (
-            <div
-              key={wrongPick.n}
-              className="anim-shake"
-              style={{
-                color: colors.danger,
-                fontSize: fontSizes.body,
-                fontWeight: fontWeights.extraBold,
-              }}
-            >
-              Ej, {wrongPick.name} to nie impostor!
-            </div>
-          )}
-        </div>
-        <div style={{ flex: 1 }} />
-        <Button variant="ghost" size="md" fullWidth onClick={() => setPhase('decision')}>
-          Wróć
-        </Button>
-      </div>
+      <GuessConfirm
+        eyebrow="Strzał impostora"
+        accent={accent}
+        shadowColor={accentShadow}
+        onConfirm={() => setPhase('guess-handoff')}
+        onBack={backFromGuess}
+      />
     )
   }
 
   if (phase === 'guess-handoff') {
-    const guesser = players.find((p) => p.id === guesserId) || players.find((p) => impostorIds.includes(p.id))
-    return (
-      <PrivacyHandoff
-        playerName={guesser.name}
-        onReady={() => setPhase('guess-entry')}
-      />
-    )
+    return <PrivacyHandoff playerName="Impostor" onReady={() => setPhase('guess-entry')} />
   }
 
   if (phase === 'guess-entry') {
@@ -633,40 +535,20 @@ export default function ModeClassic({
         >
           {L.classic.submitGuess}
         </Button>
+        <Button variant="ghost" size="md" fullWidth onClick={backFromGuess}>
+          Wróć
+        </Button>
       </div>
     )
   }
 
   // Vote result: apply scoring based on votes.
   if (phase === 'vote-result') {
-    const caught = impostorCaughtByMajority(votes, impostorIds)
-    let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-    if (caught) {
-      deltas = awardCorrectVoters(deltas, votes, impostorIds, 1)
-    } else {
-      deltas = awardImpostorSurvival(deltas, impostorIds, 2)
-    }
-
-    const nameOf = (id) => players.find((p) => p.id === id)?.name || ''
-    const impostorNames = impostorIds.map(nameOf)
-    const civilianVoters = Object.keys(votes).filter((id) => !impostorIds.includes(id))
-    const hits = civilianVoters.filter((id) => impostorIds.includes(votes[id])).length
-    const { counts, accused, topCount } = tallyVotes(votes)
-    const facts = [
-      `Impostora wskazało ${hits} z ${civilianVoters.length} cywili`,
-      accused
-        ? `Najwięcej głosów: ${nameOf(accused)} (${topCount})`
-        : null,
-      caught
-        ? `Cywile dostają po +1 pkt za trafny głos`
-        : `Impostor${impostorIds.length > 1 ? 'zy dostają' : ' dostaje'} +2 pkt za przetrwanie`,
-    ].filter(Boolean)
-    const voteRows = players.map((voter) => ({
-      voter: voter.name,
-      target: nameOf(votes[voter.id]),
-      hit: impostorIds.includes(votes[voter.id]) && !impostorIds.includes(voter.id),
-      votesReceived: counts[voter.id] || 0,
-    }))
+    const { caught, deltas, facts, voteRows, impostorNames } = buildVoteSummary({
+      players,
+      votes,
+      impostorIds,
+    })
     const headline = roundHeadline(caught ? 'caught' : 'escaped', {
       impostorNames,
       plural: impostorIds.length > 1,
@@ -700,29 +582,18 @@ export default function ModeClassic({
   if (phase === 'result') {
     // Impostor guess result.
     const correct = compareWordGuess(guessText, content.word)
-    const nameOf = (id) => players.find((p) => p.id === id)?.name || ''
-    const guesserName = nameOf(guesserId)
     let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
     if (correct) {
       deltas = awardImpostorWordGuess(deltas, impostorIds, 3)
     } else {
-      deltas = awardCorrectVoters(
-        deltas,
-        Object.fromEntries(
-          players
-            .filter((p) => !impostorIds.includes(p.id))
-            .map((p) => [p.id, impostorIds[0]])
-        ),
-        impostorIds,
-        1
-      )
+      deltas = awardCivilians(deltas, players.map((p) => p.id), impostorIds, 1)
     }
     const headline = roundHeadline(correct ? 'guessRight' : 'guessWrong', {
-      impostorNames: [guesserName],
       word: content.word,
+      plural: impostorIds.length > 1,
     })
     const facts = [
-      `${guesserName} zgaduje: „${guessText.trim()}”`,
+      `Impostor zgaduje: „${guessText.trim()}”`,
       correct
         ? `Impostor${impostorIds.length > 1 ? 'zy dostają' : ' dostaje'} +3 pkt za trafione słowo`
         : 'Cywile dostają po +1 pkt za zdemaskowanie',

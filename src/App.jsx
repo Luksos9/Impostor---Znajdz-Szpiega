@@ -5,6 +5,7 @@ import ScoreboardHeader from './components/ScoreboardHeader'
 import GameOver from './components/GameOver'
 import ModeStub from './components/modes/ModeStub'
 import { getMode } from './data/modes'
+import { getContentForMode } from './data/packs'
 import { getSettings, saveSettings, saveNames } from './utils/storage'
 import { stopSpeaking } from './utils/voice'
 import { applyDeltas } from './utils/scoring'
@@ -68,11 +69,14 @@ export default function App() {
     setGame(null)
   }
 
-  const startGame = (roster, totalRounds, impostorCount = 1) => {
+  const startGame = (roster, totalRounds, impostorCount = 1, carriedUsedIds = []) => {
     setPlayers(roster)
-    const nextSettings = { ...settings, totalRounds, impostorCount }
-    setSettings(nextSettings)
-    saveSettings({ totalRounds, impostorCount })
+    // Only remember the impostor count for modes that let you choose it, so
+    // playing Kameleon doesn't silently reset Classic's setting to 1.
+    const remembersImpostors = !!getMode(selectedModeId)?.multiImpostor
+    const patch = remembersImpostors ? { totalRounds, impostorCount } : { totalRounds }
+    setSettings({ ...settings, ...patch })
+    saveSettings(patch)
     saveNames(roster.map((p) => p.name))
 
     const initialGame = {
@@ -81,43 +85,29 @@ export default function App() {
       totalRounds,
       impostorCount,
       scores: Object.fromEntries(roster.map((p) => [p.id, 0])),
-      usedContentIds: [],
+      usedContentIds: carriedUsedIds,
       history: [],
     }
     setGame(initialGame)
-
-    console.log('[imposter] startGame', {
-      modeId: selectedModeId,
-      players: roster,
-      totalRounds,
-      settings: nextSettings,
-    })
-
     setScreen('playing')
   }
 
+  // Called by a mode when its round is over. Pure state update, then (after the
+  // last round) straight to the final screen — no deferred side effect, so the
+  // next round never flashes up for a frame.
   const finishRound = (result) => {
-    setGame((prev) => {
-      if (!prev) return prev
-      const nextScores = applyDeltas(prev.scores, result.deltas)
-      const nextRound = prev.currentRound + 1
-      const nextUsed = result.usedContentId
-        ? [...prev.usedContentIds, result.usedContentId]
-        : prev.usedContentIds
-      const nextHistory = [...prev.history, result]
-      const next = {
-        ...prev,
-        scores: nextScores,
-        currentRound: nextRound,
-        usedContentIds: nextUsed,
-        history: nextHistory,
-      }
-      if (nextRound >= prev.totalRounds) {
-        // Defer the screen transition so React commits the final scores first.
-        setTimeout(() => setScreen('gameover'), 0)
-      }
-      return next
+    if (!game) return
+    const nextRound = game.currentRound + 1
+    setGame({
+      ...game,
+      scores: applyDeltas(game.scores, result.deltas),
+      currentRound: nextRound,
+      usedContentIds: result.usedContentId
+        ? [...game.usedContentIds, result.usedContentId]
+        : game.usedContentIds,
+      history: [...game.history, result],
     })
+    if (nextRound >= game.totalRounds) setScreen('gameover')
   }
 
   const restartGame = () => {
@@ -125,7 +115,12 @@ export default function App() {
       quitToMenu()
       return
     }
-    startGame(players, settings.totalRounds, game?.impostorCount || settings.impostorCount)
+    // Carry the used words into the next game so a rematch doesn't replay them —
+    // unless that would leave too few fresh ones for the whole game.
+    const pool = getContentForMode(selectedModeId).length
+    const used = game?.usedContentIds || []
+    const carry = pool - used.length >= settings.totalRounds ? used : []
+    startGame(players, settings.totalRounds, game?.impostorCount || 1, carry)
   }
 
   if (screen === 'menu') {

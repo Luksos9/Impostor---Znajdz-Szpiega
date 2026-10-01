@@ -48,6 +48,7 @@ export default function RoundResult({
   voteRows,
   isLastRound,
   onNext,
+  role = 'impostor',
 }) {
   const impostors = players.filter((p) => impostorIds.includes(p.id))
   const impostorColor = colorForRole('impostor')
@@ -60,8 +61,9 @@ export default function RoundResult({
   const verdict = headline || narrative
   const bannerColor = impostorsWon ? colors.danger : colors.success
   const bannerShadow = impostorsWon ? colors.dangerShadow : colors.successShadow
+  const isChameleon = role === 'kameleon'
   const bannerTitle = impostorsWon
-    ? plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
+    ? isChameleon ? 'Wygrywa kameleon' : plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
     : 'Wygrywają cywile'
 
   useEffect(() => {
@@ -178,7 +180,7 @@ export default function RoundResult({
         )}
 
         {/* 3. Who the impostors were */}
-        {eyebrow(plural ? 'Impostorami byli' : L.result.impostorWas, impostorColor)}
+        {eyebrow(isChameleon ? L.result.chameleonWas : plural ? 'Impostorami byli' : L.result.impostorWas, impostorColor)}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg }}>
           {impostors.map((p) => (
             <div
@@ -330,7 +332,7 @@ export default function RoundResult({
                         color: impostorColor,
                       }}
                     >
-                      impostor
+                      {isChameleon ? 'kameleon' : 'impostor'}
                     </span>
                   )}
                 </div>

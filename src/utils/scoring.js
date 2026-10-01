@@ -48,36 +48,80 @@ export function normalizePolishForCompare(str) {
   if (typeof str !== 'string') return ''
   return str
     .toLocaleLowerCase('pl-PL')
+    .replace(/ł/g, 'l') // NFD does not decompose ł, so handle it explicitly
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
-// Compare two strings for a word-guess match.
-// Exact comparison first, then normalized fallback.
-export function compareWordGuess(guess, truth) {
-  if (typeof guess !== 'string' || typeof truth !== 'string') return false
-  if (guess.trim().toLocaleLowerCase('pl-PL') === truth.trim().toLocaleLowerCase('pl-PL')) return true
-  return normalizePolishForCompare(guess) === normalizePolishForCompare(truth)
-}
-
-// Vote tally helper. Returns { [candidateId]: count } plus the accused (most-voted).
-// Ties resolved by returning the first candidate with the max count — callers use
-// `wasCaught` to check if a specific impostor was voted for by a strict majority.
-export function tallyVotes(votes) {
-  const counts = {}
-  for (const targetId of Object.values(votes)) {
-    counts[targetId] = (counts[targetId] || 0) + 1
-  }
-  let accused = null
-  let max = 0
-  for (const [id, count] of Object.entries(counts)) {
-    if (count > max) {
-      max = count
-      accused = id
+// Edit distance (insert / delete / substitute) between two short strings.
+function editDistance(a, b) {
+  if (a === b) return 0
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    let diagonal = prev[0]
+    prev[0] = i
+    for (let j = 1; j <= b.length; j++) {
+      const up = prev[j]
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diagonal + (a[i - 1] === b[j - 1] ? 0 : 1))
+      diagonal = up
     }
   }
-  return { counts, accused, topCount: max }
+  return prev[b.length]
+}
+
+// Compare two strings for a word-guess match. Forgiving on purpose — the
+// guesser is typing on a phone while the table watches:
+//   1. exact (case-insensitive), 2. ignoring Polish diacritics (incl. ł),
+//   3. one whole word of a multi-word secret ("ogórek" for "OGÓREK KISZONY"),
+//   4. a single typo, for words of 5+ letters.
+export function compareWordGuess(guess, truth) {
+  if (typeof guess !== 'string' || typeof truth !== 'string') return false
+  const g = normalizePolishForCompare(guess)
+  const t = normalizePolishForCompare(truth)
+  if (!g || !t) return false
+  if (g === t) return true
+
+  const truthWords = t.split(' ')
+  if (truthWords.length > 1 && truthWords.some((w) => w.length >= 4 && w === g)) return true
+
+  const withinOneTypo = (x, y) => Math.min(x.length, y.length) >= 5 && editDistance(x, y) <= 1
+  if (withinOneTypo(g, t)) return true
+  if (truthWords.length > 1 && truthWords.some((w) => withinOneTypo(g, w))) return true
+  return false
+}
+
+// Vote tally over CIVILIANS' votes only. Impostors may vote for anyone (even to
+// muddy the water), but the table's verdict is what the catch rule counts.
+// Returns { counts, accused, topCount, tie }. `accused` is null on a tie.
+export function tallyCivilianVotes(votes, impostorIds) {
+  const impostorSet = new Set(impostorIds)
+  const counts = {}
+  for (const [voterId, targetId] of Object.entries(votes)) {
+    if (impostorSet.has(voterId)) continue
+    counts[targetId] = (counts[targetId] || 0) + 1
+  }
+  const entries = Object.entries(counts)
+  const topCount = entries.reduce((m, [, c]) => Math.max(m, c), 0)
+  const leaders = entries.filter(([, c]) => c === topCount).map(([id]) => id)
+  const tie = leaders.length > 1
+  return { counts, accused: topCount > 0 && !tie ? leaders[0] : null, topCount, tie }
+}
+
+// How many civilians must name an impostor to catch them: strictly more than half.
+export function votesNeededToCatch(civilianCount) {
+  return Math.floor(civilianCount / 2) + 1
+}
+
+// +points to every civilian (used when an impostor's word guess fails).
+export function awardCivilians(scores, playerIds, impostorIds, points = 1) {
+  const next = { ...scores }
+  const impostorSet = new Set(impostorIds)
+  for (const id of playerIds) {
+    if (!impostorSet.has(id)) next[id] = (next[id] || 0) + points
+  }
+  return next
 }
 
 // Klasyczny / Kameleon catch rule: strictly MORE than half of non-impostors voted for an impostor.
