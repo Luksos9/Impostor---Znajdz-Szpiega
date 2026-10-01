@@ -5,7 +5,8 @@ import ScoreboardHeader from './components/ScoreboardHeader'
 import GameOver from './components/GameOver'
 import ModeStub from './components/modes/ModeStub'
 import { getMode } from './data/modes'
-import { getSettings, saveSettings } from './utils/storage'
+import { getSettings, saveSettings, saveNames } from './utils/storage'
+import { stopSpeaking } from './utils/voice'
 import { applyDeltas } from './utils/scoring'
 import { colors } from './styles/theme'
 import { isNative } from './utils/platform'
@@ -46,28 +47,39 @@ export default function App() {
     saveSettings({ themeMode: next })
   }
 
+  // Flip a boolean setting (soundsEnabled / voiceEnabled) and persist it.
+  const toggleSetting = (key) => {
+    const next = !settings[key]
+    setSettings((prev) => ({ ...prev, [key]: next }))
+    saveSettings({ [key]: next })
+    if (key === 'voiceEnabled' && !next) stopSpeaking()
+  }
+
   const selectMode = (id) => {
     setSelectedModeId(id)
     setScreen('setup')
   }
 
   const quitToMenu = () => {
+    stopSpeaking()
     setScreen('menu')
     setSelectedModeId(null)
     setPlayers([])
     setGame(null)
   }
 
-  const startGame = (roster, totalRounds) => {
+  const startGame = (roster, totalRounds, impostorCount = 1) => {
     setPlayers(roster)
-    const nextSettings = { ...settings, totalRounds }
+    const nextSettings = { ...settings, totalRounds, impostorCount }
     setSettings(nextSettings)
-    saveSettings({ totalRounds })
+    saveSettings({ totalRounds, impostorCount })
+    saveNames(roster.map((p) => p.name))
 
     const initialGame = {
       modeId: selectedModeId,
       currentRound: 0,
       totalRounds,
+      impostorCount,
       scores: Object.fromEntries(roster.map((p) => [p.id, 0])),
       usedContentIds: [],
       history: [],
@@ -113,7 +125,7 @@ export default function App() {
       quitToMenu()
       return
     }
-    startGame(players, settings.totalRounds)
+    startGame(players, settings.totalRounds, game?.impostorCount || settings.impostorCount)
   }
 
   if (screen === 'menu') {
@@ -122,6 +134,10 @@ export default function App() {
         onPickMode={selectMode}
         themeMode={settings.themeMode}
         onToggleTheme={toggleTheme}
+        soundsEnabled={settings.soundsEnabled}
+        voiceEnabled={settings.voiceEnabled}
+        onToggleSounds={() => toggleSetting('soundsEnabled')}
+        onToggleVoice={() => toggleSetting('voiceEnabled')}
       />
     )
   }
@@ -131,6 +147,7 @@ export default function App() {
       <QuickSetup
         modeId={selectedModeId}
         initialRounds={settings.totalRounds}
+        initialImpostors={settings.impostorCount}
         onBack={quitToMenu}
         onStart={startGame}
       />
@@ -175,6 +192,8 @@ export default function App() {
             players={players}
             settings={settings}
             roundIndex={game.currentRound}
+            impostorCount={game.impostorCount}
+            usedContentIds={game.usedContentIds}
             isLastRound={isLastRound}
             onRoundComplete={finishRound}
             onQuit={quitToMenu}

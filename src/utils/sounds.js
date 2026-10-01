@@ -50,6 +50,26 @@ const SOUNDS = {
     tone(1600, 0.04, 'sine', 0.1)
   },
 
+  pop() {
+    const c = getCtx()
+    if (!c) return
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(500, c.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(900, c.currentTime + 0.07)
+    gain.gain.setValueAtTime(0.3, c.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.1)
+    osc.connect(gain)
+    gain.connect(c.destination)
+    osc.start(c.currentTime)
+    osc.stop(c.currentTime + 0.1)
+  },
+
+  step() {
+    tone(660, 0.05, 'triangle', 0.22)
+  },
+
   reveal() {
     const c = getCtx()
     if (!c) return
@@ -96,6 +116,16 @@ const SOUNDS = {
       tone(150, 0.35, 'square', 0.18)
       tone(147, 0.35, 'sawtooth', 0.08)
     }, 120)
+  },
+
+  // Sly descending notes: the impostor got away with it.
+  sneaky() {
+    tone(392, 0.14, 'triangle', 0.3)
+    setTimeout(() => tone(330, 0.14, 'triangle', 0.3), 130)
+    setTimeout(() => {
+      tone(262, 0.35, 'triangle', 0.32)
+      tone(131, 0.35, 'sine', 0.18)
+    }, 260)
   },
 
   roundEnd() {

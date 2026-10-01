@@ -13,6 +13,7 @@ export const MODE_REGISTRY = [
     label: 'Klasyczny impostor',
     blurb: 'Opisuj słowo, znajdź impostora',
     minPlayers: 3,
+    multiImpostor: true,
     Component: ModeClassic,
   },
   {

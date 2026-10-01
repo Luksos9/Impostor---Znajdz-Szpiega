@@ -10,6 +10,7 @@ import {
 import { L } from '../utils/labels'
 import { MODE_REGISTRY } from '../data/modes'
 import ThemeToggle from './ui/ThemeToggle'
+import SettingToggle from './ui/SettingToggle'
 
 // Iconic dark-navy badge illustrations hand-picked by the user. The dark
 // bleed edge blends into the card background so each tile reads as part of
@@ -33,7 +34,15 @@ const MENU_ORDER = ['classic', 'kameleon', 'pairsQuestion']
 // borders read as vivid stripes on cream surfaces.
 // Content is clamped to a centered ~560px column so desktop doesn't
 // stretch the cards into thin strips.
-export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme }) {
+export default function Menu({
+  onPickMode,
+  themeMode = 'light',
+  onToggleTheme,
+  soundsEnabled = true,
+  voiceEnabled = true,
+  onToggleSounds,
+  onToggleVoice,
+}) {
   const ordered = MENU_ORDER
     .map((id) => MODE_REGISTRY.find((m) => m.id === id))
     .filter(Boolean)
@@ -49,7 +58,7 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: spacing.xxl,
+        paddingTop: spacing.lg,
         paddingBottom: spacing.xxl,
         paddingLeft: spacing.md,
         paddingRight: spacing.md,
@@ -72,20 +81,6 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
         }}
       />
 
-      {/* Theme toggle — absolute top-right so it never displaces the header. */}
-      {onToggleTheme && (
-        <div
-          style={{
-            position: 'absolute',
-            top: spacing.lg,
-            right: spacing.lg,
-            zIndex: 3,
-          }}
-        >
-          <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />
-        </div>
-      )}
-
       {/* Content column — clamped to 560px so desktop doesn't stretch cards
           into awkward strips. zIndex:1 keeps text above the bokeh/silhouette. */}
       <div
@@ -98,12 +93,30 @@ export default function Menu({ onPickMode, themeMode = 'light', onToggleTheme })
           flexDirection: 'column',
         }}
       >
+        {/* Settings row: sound + narrator on the left, theme on the right. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: spacing.md,
+          }}
+        >
+          <div style={{ display: 'flex', gap: spacing.sm }}>
+            {onToggleSounds && (
+              <SettingToggle kind="sound" on={soundsEnabled} onToggle={onToggleSounds} />
+            )}
+            {onToggleVoice && (
+              <SettingToggle kind="voice" on={voiceEnabled} onToggle={onToggleVoice} />
+            )}
+          </div>
+          {onToggleTheme && <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />}
+        </div>
+
         <header
           style={{
             textAlign: 'center',
             marginBottom: spacing.xl,
-            paddingLeft: spacing.xxl,
-            paddingRight: spacing.xxl,
           }}
         >
           <div

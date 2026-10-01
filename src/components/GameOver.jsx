@@ -5,20 +5,28 @@ import Button from './ui/Button'
 import Card from './ui/Card'
 import { hapticSuccess } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
+import { speak } from '../utils/voice'
+import { gameOverLine } from '../utils/narration'
 
 const CONFETTI_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#F5A623', '#A855F7', '#EC4899', '#FFFFFF']
 
 // Final standings after the last round.
 // Players sorted by score descending. Winners get a celebrated success row.
 export default function GameOver({ players, scores, onRestart, onMenu }) {
-  useEffect(() => {
-    hapticSuccess()
-    playSound('celebrate')
-  }, [])
-
   const sorted = [...players].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
   const topScore = sorted.length > 0 ? scores[sorted[0].id] || 0 : 0
   const winners = sorted.filter((p) => (scores[p.id] || 0) === topScore)
+
+  useEffect(() => {
+    hapticSuccess()
+    playSound('celebrate')
+    return speak(
+      gameOverLine(winners.map((w) => w.name), topScore),
+      { delay: 1100 }
+    )
+    // Final standings are fixed once this screen shows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const confetti = useMemo(() =>
     Array.from({ length: 40 }, (_, i) => ({

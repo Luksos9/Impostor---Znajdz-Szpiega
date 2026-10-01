@@ -6,6 +6,8 @@ const SETTINGS_KEY = 'imposter.settings'
 const DEFAULT_SETTINGS = {
   totalRounds: 5,
   soundsEnabled: true,
+  voiceEnabled: true,
+  impostorCount: 1,
   themeMode: 'light', // 'light' | 'dark'
 }
 
@@ -31,5 +33,25 @@ export function saveSettings(patch) {
   } catch (err) {
     console.error('[storage] save settings failed:', err)
     return getSettings()
+  }
+}
+
+// Player names the group typed last time, so nobody retypes them every game.
+const NAMES_KEY = 'imposter.names'
+
+export function getSavedNames() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(NAMES_KEY) || '[]')
+    return Array.isArray(parsed) ? parsed.filter((n) => typeof n === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+export function saveNames(names) {
+  try {
+    localStorage.setItem(NAMES_KEY, JSON.stringify(names))
+  } catch (err) {
+    console.warn('[storage] save names failed:', err)
   }
 }

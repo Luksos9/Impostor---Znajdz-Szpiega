@@ -16,21 +16,20 @@ import {
   colorForMode,
   colorForModeShadow,
 } from '../../styles/theme'
-import { pickImpostor } from '../../utils/players'
+import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
   awardImpostorSurvival,
   awardCorrectVoters,
   impostorCaughtByMajority,
 } from '../../utils/scoring'
-import { shuffle } from '../../utils/shuffle'
 import { L } from '../../utils/labels'
 
 const MODE_ID = 'pairsQuestion'
 
 // Kto ma inne pytanie?: write-and-reveal mode.
 // Flow: reveal question (private) → write answer (private) → reveal grid (public) → vote → result
-export default function ModePairsQuestion({ players, roundIndex, isLastRound, onRoundComplete }) {
+export default function ModePairsQuestion({ players, roundIndex, isLastRound, onRoundComplete, usedContentIds = [] }) {
   // Refs keep impostor and content out of React DevTools state.
   const impostorRef = useRef(null)
   const contentRef = useRef(null)
@@ -40,11 +39,12 @@ export default function ModePairsQuestion({ players, roundIndex, isLastRound, on
     impostorRef.current = pickImpostor(players).id
   }
   if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, [])
+    const picked = pickContent(MODE_ID, usedContentIds)
     contentRef.current = picked.item
   }
   if (orderRef.current === null) {
-    orderRef.current = shuffle(players).map((p) => p.id)
+    // An impostor speaks first only ~5% of the time.
+    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
   }
 
   const impostorIds = [impostorRef.current]
