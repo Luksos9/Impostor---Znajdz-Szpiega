@@ -110,12 +110,12 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
 
       {voted && (
         <div
-          className="anim-enter"
+          className="anim-bounce"
           style={{
             textAlign: 'center',
             marginTop: spacing.lg,
-            fontSize: fontSizes.body,
-            fontWeight: fontWeights.extraBold,
+            fontSize: fontSizes.h3,
+            fontWeight: fontWeights.black,
             color: colors.success,
           }}
         >

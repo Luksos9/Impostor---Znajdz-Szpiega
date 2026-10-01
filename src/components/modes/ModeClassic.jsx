@@ -144,7 +144,7 @@ export default function ModeClassic({ players, roundIndex, isLastRound, onRoundC
       >
         <div
           key={currentSpeaker.id}
-          className="anim-fade"
+          className="anim-slide-right"
           style={{
             flex: 1,
             display: 'flex',

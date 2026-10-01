@@ -88,6 +88,7 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
             }}
           >
             <div
+              className="anim-bounce"
               style={{
                 fontSize: fontSizes.h1,
                 fontWeight: fontWeights.black,
@@ -96,6 +97,7 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
                 marginBottom: hint ? spacing.md : 0,
                 wordBreak: 'break-word',
                 color: colors.textPrimary,
+                animationDelay: '150ms',
               }}
             >
               {secret}
