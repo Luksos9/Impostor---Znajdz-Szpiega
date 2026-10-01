@@ -28,7 +28,17 @@ import {
   tallyVotes,
 } from '../../utils/scoring'
 import { speak } from '../../utils/voice'
-import { roundHeadline, speakerLine, voteStartLine } from '../../utils/narration'
+import {
+  roundHeadline,
+  speakerLine,
+  speakerQuip,
+  voteStartLine,
+  roundIntroLine,
+  turnLine,
+  decisionLine,
+  guessEntryLine,
+} from '../../utils/narration'
+import { useNudge } from '../../utils/useNudge'
 import { L, t } from '../../utils/labels'
 
 const MAX_TURNS = 3
@@ -85,13 +95,22 @@ export default function ModeClassic({
   const currentSpeaker = players.find((p) => p.id === speakerOrder[speakerIdx])
   const currentVoter = players.find((p) => p.id === speakerOrder[voteIdx])
 
-  // Narrator: announce each speaker as their turn starts.
+  // Narrator: announce each speaker, each new turn, the decision and the guess.
   useEffect(() => {
-    if (phase !== 'describe') return undefined
-    const speaker = players.find((p) => p.id === speakerOrder[speakerIdx])
-    return speaker ? speak(speakerLine(speaker.name)) : undefined
+    if (phase === 'describe') {
+      const speaker = players.find((p) => p.id === speakerOrder[speakerIdx])
+      if (!speaker) return undefined
+      const prefix = speakerIdx === 0 && turn > 1 ? `${turnLine(turn)} ` : ''
+      return speak(`${prefix}${speakerLine(speaker.name)} ${speakerQuip()}`.trim())
+    }
+    if (phase === 'decision') return speak(decisionLine())
+    if (phase === 'guess-entry') return speak(guessEntryLine())
+    return undefined
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, speakerIdx, turn])
+
+  // Poke slow speakers and slow deciders.
+  useNudge(phase === 'describe' || phase === 'decision', { after: 20000, every: 15000 })
 
   // One impostor guesses straight away; with several we first ask who is guessing.
   const startGuess = () => {
@@ -109,6 +128,7 @@ export default function ModeClassic({
     return (
       <PrivacyHandoff
         playerName={currentRevealPlayer.name}
+        intro={revealIdx === 0 ? roundIntroLine(roundIndex, isLastRound) : undefined}
         onReady={() => setPhase('reveal-card')}
       />
     )
@@ -121,7 +141,8 @@ export default function ModeClassic({
         role={isImp ? 'impostor' : 'civilian'}
         label={L.card.yourWord}
         secret={isImp ? L.card.youAreImpostor : content.word}
-        hint={isImp ? L.card.youAreImpostorHint : `${L.card.category}: ${content.category}`}
+        // Civilians see only the word — a category line just confuses people.
+        hint={isImp ? L.card.youAreImpostorHint : undefined}
         accent={accent}
         onHide={() => {
           const nextIdx = revealIdx + 1

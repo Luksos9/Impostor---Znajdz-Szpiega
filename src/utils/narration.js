@@ -33,6 +33,14 @@ export function passPhoneLine(name) {
       'Telefon wędruje do: {name}.',
       '{name}, telefon czeka na Ciebie. Podglądacze, odwróćcie wzrok.',
       'Podaj telefon dalej. Następny: {name}.',
+      '{name}, bierz telefon. Reszta niech patrzy w sufit.',
+      'Teraz {name}. Reszta, zamknijcie oczy. Albo chociaż udawajcie.',
+      '{name}, Twoja kolej na telefon. Bez podglądania, proszę.',
+      'Uwaga, uwaga! Telefon dla: {name}.',
+      '{name}, odbierz telefon. To nie jest Twoja teściowa.',
+      'Ręce na telefon, {name}!',
+      '{name}, żwawo, żwawo! Telefon czeka.',
+      'Nie ociągaj się, {name}. Telefon Twój.',
     ]),
     { name }
   )
@@ -46,9 +54,29 @@ export function speakerLine(name) {
       '{name}, powiedz coś mądrego. Albo cokolwiek.',
       'Teraz {name}. Bez paniki.',
       '{name}, na scenę!',
+      '{name}, jedno słowo i ani słowa więcej.',
+      'Mikrofon dla: {name}.',
+      '{name}, mów! Ale ostrożnie.',
+      'Teraz {name}. Reszta słucha. I podejrzewa.',
+      '{name}, wszyscy czekają. Bez presji.',
+      '{name}, tempo! Jedno słowo, nie epopeja.',
+      'No dawaj, {name}. Nie ociągaj się.',
+      '{name}, ręce przy sobie, język w ruch!',
     ]),
     { name }
   )
+}
+
+// A short aside after the speaker line, now and then, to keep the table laughing.
+export function speakerQuip() {
+  if (Math.random() > 0.35) return ''
+  return pick([
+    'Impostor już się poci.',
+    'Ktoś tu coś ukrywa.',
+    'Uwaga na niepewne miny.',
+    'Cywile, słuchajcie uważnie.',
+    'Najlepsze kłamstwa brzmią najszczerzej.',
+  ])
 }
 
 export function voteStartLine() {
@@ -56,12 +84,124 @@ export function voteStartLine() {
     'Czas na głosowanie. Kto tu kłamie?',
     'Głosujemy! Wskażcie winowajcę.',
     'Pora na sąd. Kogo podejrzewacie?',
+    'Koniec gadania. Zaczynamy głosowanie!',
+    'Wysoki sądzie, proszę o głosowanie.',
   ])
 }
 
-export function gameOverLine(winners, topScore) {
+// Short, punchy inserts — the kind of thing a game-show host barks.
+const SNAPPY = [
+  'Ręce na telefon!',
+  'Żwawo, żwawo!',
+  'Raz, dwa!',
+  'Nie ociągaj się!',
+  'Szybko, bo ucieknie!',
+  'No dawaj!',
+  'Tempo, tempo!',
+]
+export function snappyLine() {
+  return pick(SNAPPY)
+}
+
+// Spoken when someone dawdles. `n` is how many pokes have already happened,
+// so the narrator gets progressively more impatient.
+export function nudgeLine(n = 0) {
+  const tiers = [
+    ['Nie ociągaj się!', 'Halo, ktoś tu jest?', 'No dalej, wszyscy czekają.', 'Tempo, tempo!'],
+    [
+      'Czas leci, a impostor się cieszy.',
+      'Obudźcie mnie, jak już zdecydujecie.',
+      'Ja tu tylko mówię, ale ktoś mógłby się ruszyć.',
+    ],
+    ['Dobra, poczekam. Mam całą wieczność.', 'Ciekawe, kto pierwszy zaśnie.'],
+  ]
+  return pick(tiers[Math.min(n, tiers.length - 1)])
+}
+
+// After hiding the card.
+export function hideLine() {
+  return pick(['Schowane. Podaj dalej, żwawo!', 'Mam to. Dawaj telefon dalej!', 'Zapamiętane. Nie ociągaj się!'])
+}
+
+// Start of every round: first round gets a proper welcome.
+export function roundIntroLine(roundIndex, isLastRound) {
+  if (roundIndex === 0) {
+    return pick([
+      'Zaczynamy grę! Powodzenia i niech wygra najlepszy kłamca.',
+      'Zaczynamy! Dziś ktoś tu będzie kłamał.',
+      'Gramy! Pamiętajcie: nikomu nie pokazujcie ekranu.',
+    ])
+  }
+  if (isLastRound) {
+    return pick([
+      'Ostatnia runda! Teraz albo nigdy.',
+      'Finałowa runda. Wszystko może się jeszcze zmienić.',
+    ])
+  }
+  return `Runda ${roundIndex + 1}. ` + pick([
+    'Kto tym razem będzie kłamał?',
+    'Nowe słowo, nowy impostor.',
+    'Ostrzcie języki.',
+  ])
+}
+
+// A new describe turn (turn 2, 3...): the table goes around again.
+export function turnLine(turn) {
+  return `Tura ${turn}. ` + pick([
+    'Jedziemy jeszcze raz.',
+    'Teraz trzeba się bardziej postarać.',
+    'Impostor zaczyna się denerwować.',
+  ])
+}
+
+export function decisionLine() {
+  return pick([
+    'Co teraz? Głosujemy, jedziemy dalej, czy ktoś chce zgadywać?',
+    'Pora na decyzję. Głosowanie, kolejna tura albo strzał impostora.',
+    'Ustalcie to między sobą. Głosujemy, czy gramy dalej?',
+  ])
+}
+
+export function cardReminderLine() {
+  return pick([
+    'Tylko Ty patrzysz na ekran. Zapamiętaj i schowaj.',
+    'Spójrz i zapamiętaj. Nikomu ani słowa.',
+    'To tylko dla Ciebie. Miej kamienną twarz.',
+  ])
+}
+
+export function voteEntryLine() {
+  return pick([
+    'Wybierz po cichu. Nikt nie patrzy.',
+    'Kogo podejrzewasz? Stuknij imię.',
+    'Głosuj z sercem. I z podejrzliwością.',
+  ])
+}
+
+export function guessEntryLine() {
+  return pick([
+    'Impostor zgaduje słowo. Reszta, ani pary z ust.',
+    'Teraz jedna próba. Wpisz słowo i trzymaj kciuki.',
+    'Strzał impostora! Cisza na sali.',
+  ])
+}
+
+// Who gained the most this round, e.g. "Najwięcej punktów zdobywa Ala: plus 2."
+export function pointsLine(deltas, players) {
+  const best = Math.max(0, ...players.map((p) => deltas[p.id] || 0))
+  if (best <= 0) return 'W tej rundzie nikt nie zdobywa punktów.'
+  const names = players.filter((p) => (deltas[p.id] || 0) === best).map((p) => p.name)
+  const verb = names.length > 1 ? 'zdobywają' : 'zdobywa'
+  return `Najwięcej punktów ${verb}: ${joinNames(names)}, po plus ${best}.`
+}
+
+export function gameOverLine(winners, topScore, runnersUp = [], runnerScore = 0) {
   const names = joinNames(winners)
   const score = `${topScore} ${pointsWord(topScore)}`
+  const second =
+    runnersUp.length > 0
+      ? ` Drugie miejsce: ${joinNames(runnersUp)}, ${runnerScore} ${pointsWord(runnerScore)}.`
+      : ''
   if (winners.length > 1) {
     return fill(
       pick([
@@ -69,16 +209,17 @@ export function gameOverLine(winners, topScore) {
         'Remis! {names} dzielą zwycięstwo, po {score}.',
       ]),
       { names, score }
-    )
+    ) + second
   }
   return fill(
     pick([
       'Koniec gry! Wygrywa {names} z wynikiem {score}. Reszta może się pocieszać.',
       'Wygrywa {names}! {score}. Gratulacje, geniuszu zbrodni.',
       'Mamy zwycięzcę: {names}, {score}!',
+      'Bijcie brawo! {names} wygrywa, {score}.',
     ]),
     { names, score }
-  )
+  ) + second
 }
 
 // Round outcome copy. `kind` is one of:
@@ -100,6 +241,7 @@ export function roundHeadline(kind, { impostorNames = [], word = '', plural = fa
           'Mamy Cię, {names}! Cywile wygrywają.',
           '{names} wpada! Cywile zacierają ręce.',
           'Zdemaskowano: {names}. Cywile wygrywają!',
+          'Dobra robota, cywile! {names} nie ma już gdzie uciec.',
         ],
     escaped: plural
       ? [

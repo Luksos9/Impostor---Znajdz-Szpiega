@@ -4,6 +4,7 @@ import { L } from '../utils/labels'
 import Button from './ui/Button'
 import { speak } from '../utils/voice'
 import { passPhoneLine } from '../utils/narration'
+import { useNudge } from '../utils/useNudge'
 
 // Full-screen blocker between private reveals.
 // Shown before every CardReveal and before every private vote.
@@ -12,6 +13,7 @@ import { passPhoneLine } from '../utils/narration'
 export default function PrivacyHandoff({ playerName, onReady, intro }) {
   // Narrator announces who gets the phone. `intro` (optional) is read first,
   // e.g. "Czas na głosowanie." — held in a ref so it's only chosen once.
+  useNudge(true, { after: 12000 })
   const introRef = useRef(intro)
   useEffect(
     () => speak(`${introRef.current ? `${introRef.current} ` : ''}${passPhoneLine(playerName)}`),

@@ -1,15 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
 import Button from './ui/Button'
 import { hapticMedium } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
+import { speak } from '../utils/voice'
+import { voteEntryLine } from '../utils/narration'
+import { useNudge } from '../utils/useNudge'
 
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote, disables all buttons, and calls onVote(targetId).
 // Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
 export default function VoteGrid({ players, voterId, voterName, onVote, accent }) {
   const [voted, setVoted] = useState(false)
+  useEffect(() => speak(voteEntryLine(), { delay: 300 }), [])
+  useNudge(!voted, { after: 15000 })
   const candidates = players.filter((p) => p.id !== voterId)
   const cols = candidates.length <= 4 ? '1fr' : '1fr 1fr'
 
