@@ -19,9 +19,20 @@
     <meta name="mobile-web-app-capable" content="yes" />
 
     <title>Impostor — Gra imprezowa</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      /* Set the theme before first paint (saved choice, else the phone's setting)
+         so dark-mode phones never flash the light cream background. */
+      (function () {
+        try {
+          var t = null;
+          try { t = JSON.parse(localStorage.getItem('imposter.settings') || '{}').themeMode; } catch (e) {}
+          if (t !== 'dark' && t !== 'light') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
     <style>
       /* ─── Theme tokens as CSS variables ───
          Components import { colors } from styles/theme.js, where each value is
@@ -93,7 +104,7 @@
         min-height: 100%;
         background-color: var(--color-bg);
         color: var(--color-text-primary);
-        font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+        font-family: 'Nunito Variable', 'Nunito', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         overscroll-behavior-y: none;

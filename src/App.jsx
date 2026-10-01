@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import ErrorBoundary from './components/ErrorBoundary'
+import { useWakeLock } from './utils/useWakeLock'
+import { saveSession, clearSession, loadSession } from './utils/session'
+import { applyUpdate, isUpdateReady, onUpdateReady } from './utils/updater'
 import Menu from './components/Menu'
 import QuickSetup from './components/QuickSetup'
 import ScoreboardHeader from './components/ScoreboardHeader'
@@ -22,6 +26,19 @@ export default function App() {
   const [players, setPlayers] = useState([])
   const [settings, setSettings] = useState(() => getSettings())
   const [game, setGame] = useState(null)
+  // An unfinished game from before iOS killed/reloaded the app (see utils/session.js).
+  const [session, setSession] = useState(() => loadSession())
+  const [retryKey, setRetryKey] = useState(0)
+  const [updateReady, setUpdateReady] = useState(() => isUpdateReady())
+
+  // Keep the screen awake during play — the phone sits on the table between turns.
+  useWakeLock(screen === 'playing')
+
+  // A new app version is applied only when idle on the menu, never mid-round.
+  useEffect(() => onUpdateReady(setUpdateReady), [])
+  useEffect(() => {
+    if (updateReady && screen === 'menu') applyUpdate()
+  }, [updateReady, screen])
 
   // Apply the persisted theme on mount and whenever it changes.
   // Theme tokens are CSS variables keyed off [data-theme] on <html>.
@@ -29,8 +46,9 @@ export default function App() {
     const mode = settings.themeMode === 'dark' ? 'dark' : 'light'
     document.documentElement.dataset.theme = mode
     // Keep the iOS status bar / browser chrome in sync with the new bg.
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) =>
+      meta.setAttribute('content', mode === 'dark' ? '#181412' : '#FFF8EC')
+    )
 
     // Native: sync the Android/iOS status bar color and style.
     if (isNative) {
@@ -61,8 +79,29 @@ export default function App() {
     setScreen('setup')
   }
 
+  // Back to the menu after an error: keep the saved game so it can be resumed.
+  const leaveAfterError = () => {
+    stopSpeaking()
+    setSession(loadSession())
+    setScreen('menu')
+    setSelectedModeId(null)
+    setPlayers([])
+    setGame(null)
+  }
+
+  const resumeGame = () => {
+    if (!session) return
+    setSelectedModeId(session.modeId)
+    setPlayers(session.players)
+    setGame(session.game)
+    setSession(null)
+    setScreen('playing')
+  }
+
   const quitToMenu = () => {
     stopSpeaking()
+    clearSession()
+    setSession(null)
     setScreen('menu')
     setSelectedModeId(null)
     setPlayers([])
@@ -89,6 +128,7 @@ export default function App() {
       history: [],
     }
     setGame(initialGame)
+    saveSession({ modeId: selectedModeId, players: roster, game: initialGame })
     setScreen('playing')
   }
 
@@ -98,7 +138,7 @@ export default function App() {
   const finishRound = (result) => {
     if (!game) return
     const nextRound = game.currentRound + 1
-    setGame({
+    const nextGame = {
       ...game,
       scores: applyDeltas(game.scores, result.deltas),
       currentRound: nextRound,
@@ -106,8 +146,14 @@ export default function App() {
         ? [...game.usedContentIds, result.usedContentId]
         : game.usedContentIds,
       history: [...game.history, result],
-    })
-    if (nextRound >= game.totalRounds) setScreen('gameover')
+    }
+    setGame(nextGame)
+    if (nextRound >= game.totalRounds) {
+      clearSession()
+      setScreen('gameover')
+    } else {
+      saveSession({ modeId: game.modeId, players, game: nextGame })
+    }
   }
 
   const restartGame = () => {
@@ -133,6 +179,16 @@ export default function App() {
         voiceEnabled={settings.voiceEnabled}
         onToggleSounds={() => toggleSetting('soundsEnabled')}
         onToggleVoice={() => toggleSetting('voiceEnabled')}
+        resume={
+          session
+            ? {
+                modeLabel: getMode(session.modeId)?.label,
+                round: session.game.currentRound + 1,
+                total: session.game.totalRounds,
+              }
+            : null
+        }
+        onResume={resumeGame}
       />
     )
   }
@@ -169,6 +225,9 @@ export default function App() {
           totalRounds={game.totalRounds}
           modeId={game.modeId}
           onQuit={quitToMenu}
+          settings={settings}
+          onToggleSetting={toggleSetting}
+          onToggleTheme={toggleTheme}
         />
         <div
           style={{
@@ -182,8 +241,12 @@ export default function App() {
             margin: '0 auto',
           }}
         >
+          <ErrorBoundary
+            title="Ta runda się wysypała"
+            onReset={(action) => (action === 'retry' ? setRetryKey((k) => k + 1) : leaveAfterError())}
+          >
           <ModeComp
-            key={`${game.modeId}-${game.currentRound}`}
+            key={`${game.modeId}-${game.currentRound}-${retryKey}`}
             players={players}
             settings={settings}
             roundIndex={game.currentRound}
@@ -193,6 +256,7 @@ export default function App() {
             onRoundComplete={finishRound}
             onQuit={quitToMenu}
           />
+          </ErrorBoundary>
         </div>
       </div>
     )

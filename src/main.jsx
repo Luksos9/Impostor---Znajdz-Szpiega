@@ -1,14 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
+import './fonts.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary'
+import { initUpdater } from './utils/updater'
 
-// Register the service worker. `registerType: 'autoUpdate'` in vite.config.js
-// makes new versions install automatically; this call hooks them up at runtime.
-registerSW({ immediate: true })
+// New versions install in the background and are applied on the menu only
+// (see utils/updater.js) — never in the middle of a round.
+initUpdater()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary title="Coś poszło nie tak" onReset={() => window.location.reload()}>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )

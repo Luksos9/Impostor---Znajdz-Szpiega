@@ -3,24 +3,35 @@
 
 const SETTINGS_KEY = 'imposter.settings'
 
-const DEFAULT_SETTINGS = {
+// First launch follows the phone's light/dark setting; after that the choice sticks.
+function systemTheme() {
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  } catch {
+    return 'light'
+  }
+}
+
+const baseSettings = {
   totalRounds: 5,
   soundsEnabled: true,
   voiceEnabled: true,
   impostorCount: 1,
-  themeMode: 'light', // 'light' | 'dark'
+  // themeMode: 'light' | 'dark' — filled in by defaults()
 }
+
+const defaults = () => ({ ...baseSettings, themeMode: systemTheme() })
 
 export function getSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (!raw) return { ...DEFAULT_SETTINGS }
+    if (!raw) return defaults()
     const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_SETTINGS }
-    return { ...DEFAULT_SETTINGS, ...parsed }
+    if (typeof parsed !== 'object' || parsed === null) return defaults()
+    return { ...defaults(), ...parsed }
   } catch (err) {
     console.warn('[storage] could not parse settings:', err)
-    return { ...DEFAULT_SETTINGS }
+    return defaults()
   }
 }
 
