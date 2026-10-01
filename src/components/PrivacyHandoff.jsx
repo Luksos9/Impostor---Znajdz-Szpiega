@@ -1,12 +1,23 @@
+import { useEffect, useRef } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
 import { L } from '../utils/labels'
 import Button from './ui/Button'
+import { speak } from '../utils/voice'
+import { passPhoneLine } from '../utils/narration'
 
 // Full-screen blocker between private reveals.
 // Shown before every CardReveal and before every private vote.
 // Mode-agnostic by design — neutral surface, no accent color, just the
 // player's name in display size and the "flip and pass" physical cue.
-export default function PrivacyHandoff({ playerName, onReady }) {
+export default function PrivacyHandoff({ playerName, onReady, intro }) {
+  // Narrator announces who gets the phone. `intro` (optional) is read first,
+  // e.g. "Czas na głosowanie." — held in a ref so it's only chosen once.
+  const introRef = useRef(intro)
+  useEffect(
+    () => speak(`${introRef.current ? `${introRef.current} ` : ''}${passPhoneLine(playerName)}`),
+    [playerName]
+  )
+
   return (
     <div
       className="anim-enter"

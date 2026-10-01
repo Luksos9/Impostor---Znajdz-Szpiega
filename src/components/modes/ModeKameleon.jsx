@@ -17,7 +17,7 @@ import {
   colorForMode,
   colorForModeShadow,
 } from '../../styles/theme'
-import { pickImpostor } from '../../utils/players'
+import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
   awardImpostorSurvival,
@@ -25,7 +25,6 @@ import {
   awardImpostorWordGuess,
   impostorCaughtByMajority,
 } from '../../utils/scoring'
-import { shuffle } from '../../utils/shuffle'
 import { L, t } from '../../utils/labels'
 
 const MAX_TURNS = 2
@@ -33,7 +32,7 @@ const MODE_ID = 'kameleon'
 
 // Kameleon: Chameleon-style grid mode.
 // Flow: public grid → secret reveal (private) → describe turns → decision → vote or grid guess → result
-export default function ModeKameleon({ players, roundIndex, isLastRound, onRoundComplete }) {
+export default function ModeKameleon({ players, roundIndex, isLastRound, onRoundComplete, usedContentIds = [] }) {
   const impostorRef = useRef(null)
   const contentRef = useRef(null)
   const secretRef = useRef(null)
@@ -43,14 +42,15 @@ export default function ModeKameleon({ players, roundIndex, isLastRound, onRound
     impostorRef.current = pickImpostor(players).id
   }
   if (contentRef.current === null) {
-    const picked = pickContent(MODE_ID, [])
+    const picked = pickContent(MODE_ID, usedContentIds)
     contentRef.current = picked.item
     // Pick a random word from the grid as the secret.
     const words = picked.item?.words || []
     secretRef.current = words[Math.floor(Math.random() * words.length)]
   }
   if (orderRef.current === null) {
-    orderRef.current = shuffle(players).map((p) => p.id)
+    // An impostor speaks first only ~5% of the time.
+    orderRef.current = makeSpeakerOrder(players, [impostorRef.current])
   }
 
   const impostorIds = [impostorRef.current]
