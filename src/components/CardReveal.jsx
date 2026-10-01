@@ -13,6 +13,9 @@ import { L } from '../utils/labels'
 import Card from './ui/Card'
 import Button from './ui/Button'
 import { playSound } from '../utils/sounds'
+import { speak } from '../utils/voice'
+import { cardReminderLine, hideLine } from '../utils/narration'
+import { useNudge } from '../utils/useNudge'
 
 // Secret card reveal with two-tap hide confirmation.
 // First tap on "Już pamiętam" hides the secret and shows "Schowane, tap to pass".
@@ -22,16 +25,24 @@ import { playSound } from '../utils/sounds'
 //   role:    'civilian' | 'impostor'       controls the role color + label
 //   label:   'Twoje słowo' etc.            label shown above the main secret
 //   secret:  'PIZZA' or 'Jesteś impostorem' the actual secret content
-//   hint:    optional subline (category for Klasyczny, hint for impostor)
+//   hint:    optional subline (e.g. the hint shown to the impostor)
 //   accent:  hex color                      mode accent used for the secondary CTA
 //   onHide:  called after the second tap
 export default function CardReveal({ role, label, secret, hint, accent, onHide }) {
   const [hidden, setHidden] = useState(false)
   const roleColor = colorForRole(role)
 
-  useEffect(() => { playSound('reveal') }, [])
+  // Reminder is the same for every role, so it never leaks who is the impostor.
+  useEffect(() => {
+    playSound('reveal')
+    return speak(cardReminderLine(), { delay: 500 })
+  }, [])
+
+  // Nudge only once the card is hidden and the phone should move on.
+  useNudge(hidden, { after: 9000 })
 
   const handleFirstTap = () => {
+    speak(hideLine(), { delay: 0 })
     playSound('tap')
     setHidden(true)
   }

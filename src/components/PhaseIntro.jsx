@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { colors, fonts, fontSizes, fontWeights, spacing } from '../styles/theme'
+import { speak } from '../utils/voice'
 import Button from './ui/Button'
 
 // Bridge screen between phases. Used to tell players in plain Polish what's
@@ -22,6 +24,9 @@ export default function PhaseIntro({
   shadowColor,
   onContinue,
 }) {
+  // Read the intro aloud so nobody has to read the phone to the table.
+  useEffect(() => speak([title, description].filter(Boolean).join('. ')), [title, description])
+
   return (
     <div
       className="anim-enter"

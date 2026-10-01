@@ -17,11 +17,15 @@ export default function GameOver({ players, scores, onRestart, onMenu }) {
   const topScore = sorted.length > 0 ? scores[sorted[0].id] || 0 : 0
   const winners = sorted.filter((p) => (scores[p.id] || 0) === topScore)
 
+  const rest = sorted.filter((p) => !winners.some((w) => w.id === p.id))
+  const runnerScore = rest.length ? scores[rest[0].id] || 0 : 0
+  const runnersUp = rest.filter((p) => (scores[p.id] || 0) === runnerScore)
+
   useEffect(() => {
     hapticSuccess()
     playSound('celebrate')
     return speak(
-      gameOverLine(winners.map((w) => w.name), topScore),
+      gameOverLine(winners.map((w) => w.name), topScore, runnersUp.map((p) => p.name), runnerScore),
       { delay: 1100 }
     )
     // Final standings are fixed once this screen shows.

@@ -16,6 +16,7 @@ import AnimatedNumber from './ui/AnimatedNumber'
 import { hapticSuccess, hapticHeavy } from '../utils/haptics'
 import { playSound } from '../utils/sounds'
 import { speak } from '../utils/voice'
+import { pointsLine } from '../utils/narration'
 
 // Round result, told as a short story so nobody asks "wait, who won?":
 //   1. Banner      – which side won (cywile / impostor), with sound + haptic
@@ -67,7 +68,8 @@ export default function RoundResult({
     playSound(impostorsWon ? 'sneaky' : 'correct')
     if (impostorsWon) hapticHeavy()
     else hapticSuccess()
-    return speak(speech || verdict, { delay: 900 })
+    const closing = isLastRound ? 'To była ostatnia runda.' : ''
+    return speak(`${speech || verdict} ${pointsLine(deltas, players)} ${closing}`.trim(), { delay: 900 })
     // Only on mount: the result never changes while it is on screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
