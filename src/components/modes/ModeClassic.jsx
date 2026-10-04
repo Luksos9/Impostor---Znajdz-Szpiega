@@ -85,7 +85,9 @@ export default function ModeClassic({
 
   const accent = colorForMode(MODE_ID)
   const accentShadow = colorForModeShadow(MODE_ID)
-  const currentRevealPlayer = players.find((p) => p.id === speakerOrder[revealIdx])
+  // The phone travels round the table in seat order (the numbers from setup) for
+  // cards and votes; only the speaking order is shuffled.
+  const currentRevealPlayer = players[revealIdx]
   // Caught impostors leave the table: they no longer speak or vote.
   const activeOrder = speakerOrder.filter((id) => !caughtIds.includes(id))
   const activePlayers = players.filter((p) => !caughtIds.includes(p.id))
@@ -93,7 +95,8 @@ export default function ModeClassic({
   const hiddenCount = impostorIds.length - caughtIds.length
   const nameOf = (id) => players.find((p) => p.id === id)?.name || ''
   const currentSpeaker = players.find((p) => p.id === activeOrder[speakerIdx])
-  const currentVoter = players.find((p) => p.id === activeOrder[voteIdx])
+  const voterSeats = activePlayers.map((p) => p.id)
+  const currentVoter = players.find((p) => p.id === voterSeats[voteIdx])
 
   // Narrator: announce each speaker, each new turn, the decision and the guess.
   useEffect(() => {
@@ -133,6 +136,7 @@ export default function ModeClassic({
     return (
       <PrivacyHandoff
         playerName={currentRevealPlayer.name}
+        step={`${revealIdx + 1} / ${players.length}`}
         intro={revealIdx === 0 ? roundIntroLine(roundIndex, isLastRound) : undefined}
         onReady={() => setPhase('reveal-card')}
       />
@@ -433,6 +437,7 @@ export default function ModeClassic({
     return (
       <PrivacyHandoff
         playerName={currentVoter.name}
+        step={`${voteIdx + 1} / ${voterSeats.length}`}
         intro={voteIdx === 0 ? voteStartLine() : undefined}
         onReady={() => setPhase('vote-entry')}
       />
@@ -450,7 +455,7 @@ export default function ModeClassic({
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
           const nextIdx = voteIdx + 1
-          if (nextIdx >= activeOrder.length) {
+          if (nextIdx >= voterSeats.length) {
             // Everyone voted: this vote can expose at most ONE impostor.
             const outcome = resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
             setVoteLog((log) => [...log, outcome])

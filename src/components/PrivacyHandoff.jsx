@@ -11,7 +11,7 @@ import { useFocusHeading } from '../utils/useFocusHeading'
 // Shown before every CardReveal and before every private vote.
 // Mode-agnostic by design — neutral surface, no accent color, just the
 // player's name in display size and the "flip and pass" physical cue.
-export default function PrivacyHandoff({ playerName, onReady, intro }) {
+export default function PrivacyHandoff({ playerName, onReady, intro, step }) {
   // Narrator announces who gets the phone. `intro` (optional) is read first,
   // e.g. "Czas na głosowanie." — held in a ref so it's only chosen once.
   const headingRef = useFocusHeading()
@@ -56,6 +56,7 @@ export default function PrivacyHandoff({ playerName, onReady, intro }) {
         }}
       >
         {L.privacy.pass}
+        {step && <span style={{ marginLeft: spacing.sm }}>· {step}</span>}
       </div>
 
       <h1

@@ -18,7 +18,7 @@ import {
   colorForMode,
   colorForModeShadow,
 } from '../../styles/theme'
-import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
+import { pickImpostor } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
 } from '../../utils/scoring'
@@ -32,8 +32,6 @@ export default function ModePairsQuestion({ players, isLastRound, onRoundComplet
   // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
   const [impostorId] = useState(() => pickImpostor(players).id)
   const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
-  // An impostor speaks first only ~5% of the time.
-  const [order] = useState(() => makeSpeakerOrder(players, [impostorId]))
   const impostorIds = [impostorId]
 
   const [phase, setPhase] = useState('reveal-handoff')
@@ -45,15 +43,17 @@ export default function ModePairsQuestion({ players, isLastRound, onRoundComplet
 
   const accent = colorForMode(MODE_ID)
   const accentShadow = colorForModeShadow(MODE_ID)
-  const currentRevealPlayer = players.find((p) => p.id === order[revealIdx])
-  const currentWriter = players.find((p) => p.id === order[writeIdx])
-  const currentVoter = players.find((p) => p.id === order[voteIdx])
+  // The phone goes round the table in seat order (the numbers from setup).
+  const currentRevealPlayer = players[revealIdx]
+  const currentWriter = players[writeIdx]
+  const currentVoter = players[voteIdx]
 
   // Reveal loop: each player sees their question privately.
   if (phase === 'reveal-handoff') {
     return (
       <PrivacyHandoff
         playerName={currentRevealPlayer.name}
+        step={`${revealIdx + 1} / ${players.length}`}
         onReady={() => setPhase('reveal-card')}
       />
     )
@@ -102,6 +102,7 @@ export default function ModePairsQuestion({ players, isLastRound, onRoundComplet
     return (
       <PrivacyHandoff
         playerName={currentWriter.name}
+        step={`${writeIdx + 1} / ${players.length}`}
         onReady={() => setPhase('write-entry')}
       />
     )
@@ -265,6 +266,7 @@ export default function ModePairsQuestion({ players, isLastRound, onRoundComplet
     return (
       <PrivacyHandoff
         playerName={currentVoter.name}
+        step={`${voteIdx + 1} / ${players.length}`}
         onReady={() => setPhase('vote-entry')}
       />
     )

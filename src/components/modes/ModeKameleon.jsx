@@ -56,9 +56,10 @@ export default function ModeKameleon({ players, isLastRound, onRoundComplete, us
   const [votes, setVotes] = useState({})
   const [guessedWord, setGuessedWord] = useState(null)
 
-  const currentRevealPlayer = players.find((p) => p.id === order[revealIdx])
+  // Cards and votes go round the table in seat order; only speaking is shuffled.
+  const currentRevealPlayer = players[revealIdx]
   const currentSpeaker = players.find((p) => p.id === order[speakerIdx])
-  const currentVoter = players.find((p) => p.id === order[voteIdx])
+  const currentVoter = players[voteIdx]
 
   // Hardcoded font size 13 stays — Polish words like "Rowerzysta" wrap badly at larger sizes.
   const gridCellStyle = {
@@ -186,6 +187,7 @@ export default function ModeKameleon({ players, isLastRound, onRoundComplete, us
     return (
       <PrivacyHandoff
         playerName={currentRevealPlayer.name}
+        step={`${revealIdx + 1} / ${players.length}`}
         onReady={() => setPhase('reveal-card')}
       />
     )
@@ -444,6 +446,7 @@ export default function ModeKameleon({ players, isLastRound, onRoundComplete, us
     return (
       <PrivacyHandoff
         playerName={currentVoter.name}
+        step={`${voteIdx + 1} / ${players.length}`}
         onReady={() => setPhase('vote-entry')}
       />
     )

@@ -191,6 +191,17 @@ export default function QuickSetup({
 
         {/* ─── Names: always typed, remembered between games ─── */}
         <SectionLabel>{L.quickSetup.namesLabel}</SectionLabel>
+        <div
+          style={{
+            marginTop: -spacing.xs,
+            marginBottom: spacing.sm,
+            fontSize: fontSizes.bodySm,
+            fontWeight: fontWeights.semibold,
+            color: colors.textSecondary,
+          }}
+        >
+          Wpisujcie po kolei, tak jak siedzicie — telefon będzie wędrował od 1 do {roster.length}.
+        </div>
         <Card padded="sm" elevation="soft" style={{ marginBottom: spacing.lg }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
             {roster.map((p, idx) => (
