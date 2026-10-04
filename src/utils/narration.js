@@ -323,7 +323,7 @@ export function catchLine(name, remaining) {
       : `Zostało jeszcze ${remaining === 2 ? 'dwóch' : 'trzech'}.`
   if (Array.isArray(name) && name.length > 1) {
     return fill(
-      pickLine(['Mamy te gnidy! {names} to impostorzy. {left}'], [
+      pickLine(['Mamy te gnidy! {names} to impostorzy. Duet żenady, kurwa. {left}'], [
         'Podwójne trafienie! {names} to impostorzy. {left}',
         'Za jednym zamachem: {names}! {left}',
       ]),
