@@ -50,6 +50,8 @@ export default function RoundResult({
   isLastRound,
   onNext,
   role = 'impostor',
+  // Classic with several impostors: who was caught (the rest escaped).
+  caughtIds = null,
 }) {
   const impostors = players.filter((p) => impostorIds.includes(p.id))
   const impostorColor = colorForRole('impostor')
@@ -59,18 +61,23 @@ export default function RoundResult({
   const impostorPoints = impostors.reduce((sum, p) => sum + (deltas[p.id] || 0), 0)
   const side = winner || (impostorPoints > 0 ? 'impostors' : 'civilians')
   const impostorsWon = side === 'impostors'
+  // 'mixed': several impostors, some caught and some escaped — nobody swept it.
+  const mixed = side === 'mixed'
   const verdict = headline || narrative
-  const bannerColor = impostorsWon ? colors.danger : colors.success
-  const bannerShadow = impostorsWon ? colors.dangerShadow : colors.successShadow
+  // Amber #B45309 keeps white text at 5:1 contrast.
+  const bannerColor = mixed ? '#B45309' : impostorsWon ? colors.danger : colors.success
+  const bannerShadow = mixed ? '#8A3F06' : impostorsWon ? colors.dangerShadow : colors.successShadow
   const isChameleon = role === 'kameleon'
-  const bannerTitle = impostorsWon
-    ? isChameleon ? 'Wygrywa kameleon' : plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
-    : 'Wygrywają cywile'
+  const bannerTitle = mixed
+    ? 'Pół na pół'
+    : impostorsWon
+      ? isChameleon ? 'Wygrywa kameleon' : plural ? 'Wygrywają impostorzy' : 'Wygrywa impostor'
+      : 'Wygrywają cywile'
 
   const bannerRef = useFocusHeading()
 
   useEffect(() => {
-    playSound(impostorsWon ? 'sneaky' : 'correct')
+    playSound(mixed ? 'roundEnd' : impostorsWon ? 'sneaky' : 'correct')
     if (impostorsWon) hapticHeavy()
     else hapticSuccess()
     const closing = isLastRound ? 'To była ostatnia runda.' : ''
@@ -204,6 +211,20 @@ export default function RoundResult({
               }}
             >
               {p.name}
+              {caughtIds && plural && (
+                <span
+                  style={{
+                    marginLeft: spacing.sm,
+                    fontSize: fontSizes.eyebrow,
+                    fontWeight: fontWeights.extraBold,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: caughtIds.includes(p.id) ? colors.success : impostorColor,
+                  }}
+                >
+                  {caughtIds.includes(p.id) ? 'w areszcie' : 'na wolności'}
+                </span>
+              )}
             </div>
           ))}
         </div>

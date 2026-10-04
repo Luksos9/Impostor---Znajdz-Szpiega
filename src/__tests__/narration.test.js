@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { gameOverLine, joinNames, passPhoneLine, pointsLine, pointsWord, roundHeadline } from '../utils/narration'
+import {
+  catchLine,
+  gameOverLine,
+  joinNames,
+  partnersLine,
+  passPhoneLine,
+  pointsLine,
+  pointsWord,
+  roundHeadline,
+} from '../utils/narration'
 
 describe('pointsWord (Polish plural)', () => {
   it('handles 1, 2-4, 5+, teens and 22', () => {
@@ -53,5 +62,38 @@ describe('narration copy', () => {
     expect(pointsLine({ a: 2, b: 0 }, players)).toContain('Ala')
     expect(pointsLine({ a: 1, b: 1 }, players)).toContain('Ala i Bob')
     expect(pointsLine({ a: 0, b: 0 }, players)).toMatch(/nikt/)
+  })
+})
+
+describe('multi-impostor lines', () => {
+  it('partnersLine names the other impostor(s)', () => {
+    expect(partnersLine([])).toBe('')
+    expect(partnersLine(['Ala'])).toBe('Drugi impostor: Ala')
+    expect(partnersLine(['Ala', 'Bob'])).toBe('Pozostali impostorzy: Ala i Bob')
+  })
+
+  it('catchLine names the caught player and how many remain', () => {
+    for (let i = 0; i < 30; i++) {
+      expect(catchLine('Ewa', 1)).toMatch(/Ewa.*jeszcze jeden/)
+      expect(catchLine('Ewa', 2)).toMatch(/jeszcze dwóch/)
+      expect(catchLine('Ewa', 3)).toMatch(/jeszcze trzech/)
+    }
+  })
+
+  it('partial headline agrees in number and never leaks placeholders', () => {
+    for (let i = 0; i < 40; i++) {
+      const one = roundHeadline('partial', { caughtNames: ['Ala'], escapedNames: ['Bob'] })
+      const two = roundHeadline('partial', { caughtNames: ['Ala', 'Cy'], escapedNames: ['Bob'] })
+      for (const line of [one, two]) expect(line).not.toMatch(/[{}]/)
+      expect(one).not.toMatch(/wpadają|wychodzą/)
+      if (/wpada/.test(two)) expect(two).toMatch(/wpadają/)
+    }
+  })
+
+  it('new lines avoid gendered past forms (names are typed by players)', () => {
+    for (let i = 0; i < 40; i++) {
+      const lines = [catchLine('X', 1), roundHeadline('partial', { caughtNames: ['X'], escapedNames: ['Y'] })]
+      for (const l of lines) expect(l).not.toMatch(/\b(złapany|zdemaskowany|trafiony|uciekł)\b/i)
+    }
   })
 })

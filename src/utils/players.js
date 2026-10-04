@@ -3,7 +3,7 @@
 import { shuffle } from './shuffle'
 
 export const MIN_PLAYERS = 3
-export const MAX_PLAYERS = 8
+export const MAX_PLAYERS = 10
 export const MAX_NAME_LENGTH = 14
 
 // Chance that an impostor ends up speaking first. Low on purpose: the first
@@ -69,7 +69,7 @@ export function validateRoster(players) {
 }
 
 // How many impostors a lobby of `playerCount` can have. Keeps a clear
-// civilian majority: 3-4 → 1, 5-6 → 2, 7-8 → 3.
+// civilian majority: 3-4 → 1, 5-6 → 2, 7-8 → 3, 9-10 → 4.
 export function maxImpostors(playerCount) {
   return Math.max(1, Math.floor((playerCount - 1) / 2))
 }

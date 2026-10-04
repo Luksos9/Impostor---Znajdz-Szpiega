@@ -10,7 +10,7 @@ const SECTIONS = [
   },
   {
     title: 'Klasyczny impostor',
-    body: 'Cywile dostają to samo słowo, impostor nie dostaje żadnego. Po kolei mówicie JEDNO słowo opisujące hasło: nie za oczywiste, żeby impostor go nie zgadł, i nie za dziwne, żeby cywile Wam uwierzyli. Potem głosujecie albo gracie kolejną turę (maksymalnie trzy). Impostor może w każdej chwili spróbować zgadnąć słowo — to kończy rundę.',
+    body: 'Cywile dostają to samo słowo, impostor nie dostaje żadnego. Po kolei mówicie JEDNO słowo opisujące hasło: nie za oczywiste, żeby impostor go nie zgadł, i nie za dziwne, żeby cywile Wam uwierzyli. Potem głosujecie albo gracie kolejną turę (maksymalnie trzy). Impostor może w każdej chwili spróbować zgadnąć słowo — to kończy rundę. Gdy impostorów jest kilku, znają się nawzajem (widzą to na swojej karcie), a cywile łapią ich po jednym: po każdym złapanym możecie grać dalej albo głosować na następnego.',
   },
   {
     title: 'Kameleon',
@@ -22,7 +22,7 @@ const SECTIONS = [
   },
   {
     title: 'Głosowanie i punkty',
-    body: 'Impostor jest złapany, gdy wskaże go więcej niż połowa cywili. Złapany: każdy cywil, który trafił, dostaje +1. Ucieka: impostor dostaje +2. Impostor zgadnie słowo: +3 dla impostorów. Nie trafi: +1 dla każdego cywila. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
+    body: 'Głosowanie wskazuje jedną osobę: tę, którą wybierze więcej niż połowa cywili. Jeśli to impostor, odpada, a każdy cywil, który go wskazał, dostaje +1. Jeśli głosy się rozejdą albo wskażecie cywila, runda się kończy i każdy impostor, który się ukrył, dostaje +2. Impostor zgadnie słowo: +3 dla impostorów. Nie trafi: +1 dla każdego cywila. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
   },
 ]
 

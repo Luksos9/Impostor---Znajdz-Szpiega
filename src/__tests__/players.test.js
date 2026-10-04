@@ -13,8 +13,8 @@ import {
 const make = (n) => Array.from({ length: n }, (_, i) => ({ id: `p-${i + 1}`, name: `N${i + 1}` }))
 
 describe('maxImpostors', () => {
-  it('keeps a civilian majority: 3-4 -> 1, 5-6 -> 2, 7-8 -> 3', () => {
-    expect([3, 4, 5, 6, 7, 8].map(maxImpostors)).toEqual([1, 1, 2, 2, 3, 3])
+  it('keeps a civilian majority: 3-4 -> 1, 5-6 -> 2, 7-8 -> 3, 9-10 -> 4', () => {
+    expect([3, 4, 5, 6, 7, 8, 9, 10].map(maxImpostors)).toEqual([1, 1, 2, 2, 3, 3, 4, 4])
   })
 })
 
@@ -89,9 +89,10 @@ describe('validateRoster', () => {
   it('rejects duplicates case-insensitively', () => {
     expect(validateRoster(named(['Ala', 'ala', 'Bob'])).error).toMatch(/różne/)
   })
-  it('enforces 3-8 players', () => {
+  it('enforces 3-10 players', () => {
     expect(validateRoster(named(['A', 'B'])).ok).toBe(false)
-    expect(validateRoster(named(Array.from({ length: 9 }, (_, i) => `P${i}`))).ok).toBe(false)
+    expect(validateRoster(named(Array.from({ length: 10 }, (_, i) => `P${i}`))).ok).toBe(true)
+    expect(validateRoster(named(Array.from({ length: 11 }, (_, i) => `P${i}`))).ok).toBe(false)
     expect(validateRoster(named(['A', 'B', 'C'])).ok).toBe(true)
   })
 })

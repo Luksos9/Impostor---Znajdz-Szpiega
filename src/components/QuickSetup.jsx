@@ -14,6 +14,7 @@ import { L, t } from '../utils/labels'
 import { getMode } from '../data/modes'
 import { getSavedNames } from '../utils/storage'
 import {
+  MAX_PLAYERS,
   emptyRoster,
   resizeRoster,
   renamePlayer,
@@ -44,12 +45,12 @@ export default function QuickSetup({
 
   const [savedNames] = useState(() => getSavedNames())
   const [playerCount, setPlayerCount] = useState(() =>
-    Math.max(minPlayers, Math.min(8, savedNames.length || 5))
+    Math.max(minPlayers, Math.min(MAX_PLAYERS, savedNames.length || 5))
   )
   const [rounds, setRounds] = useState(initialRounds || 5)
   const [impostors, setImpostors] = useState(initialImpostors)
   const [roster, setRoster] = useState(() =>
-    emptyRoster(Math.max(minPlayers, Math.min(8, savedNames.length || 5)), savedNames)
+    emptyRoster(Math.max(minPlayers, Math.min(MAX_PLAYERS, savedNames.length || 5)), savedNames)
   )
 
   // Impostor count can never exceed what the lobby allows.
@@ -63,7 +64,8 @@ export default function QuickSetup({
   const meetsMin = playerCount >= minPlayers
   const canStart = validation.ok && meetsMin
 
-  const countOptions = useMemo(() => [3, 4, 5, 6, 7, 8], [])
+  // 3..10 players.
+  const countOptions = useMemo(() => Array.from({ length: MAX_PLAYERS - 2 }, (_, i) => i + 3), [])
 
   const handleRename = (id, value) => {
     setRoster((current) => renamePlayer(current, id, value))
@@ -146,7 +148,8 @@ export default function QuickSetup({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
+            // 8 options: two rows of 4 keeps each button a comfortable tap target.
+            gridTemplateColumns: 'repeat(4, 1fr)',
             gap: spacing.sm,
             marginBottom: spacing.lg,
           }}
