@@ -3,6 +3,7 @@ import Button from './ui/Button'
 import Card from './ui/Card'
 import SettingToggle from './ui/SettingToggle'
 import ThemeToggle from './ui/ThemeToggle'
+import SpicyToggle from './ui/SpicyToggle'
 
 // In-game settings: mute sounds / narrator or flip the theme without quitting.
 // (Before this, the only way to silence the narrator mid-game was to lose the game.)
@@ -12,6 +13,8 @@ export default function SettingsSheet({
   themeMode,
   onToggleSounds,
   onToggleVoice,
+  spicyMode = false,
+  onToggleSpicy,
   onToggleTheme,
   onClose,
 }) {
@@ -68,6 +71,7 @@ export default function SettingsSheet({
           <div style={{ color: colors.textPrimary, marginBottom: spacing.lg }}>
             {row('Dźwięki', <SettingToggle kind="sound" on={soundsEnabled} onToggle={onToggleSounds} />)}
             {row('Lektor', <SettingToggle kind="voice" on={voiceEnabled} onToggle={onToggleVoice} />)}
+            {onToggleSpicy && row('Tryb +18', <SpicyToggle on={spicyMode} onToggle={onToggleSpicy} />)}
             {row('Motyw', <ThemeToggle mode={themeMode} onToggle={onToggleTheme} />)}
           </div>
           <Button variant="primary" size="lg" fullWidth accentColor={colors.textPrimary} textColor={colors.bg} onClick={onClose}>

@@ -63,7 +63,7 @@ export default function App() {
     saveSettings({ themeMode: next })
   }
 
-  // Flip a boolean setting (soundsEnabled / voiceEnabled) and persist it.
+  // Flip a boolean setting (soundsEnabled / voiceEnabled / spicyMode) and persist it.
   const toggleSetting = (key) => {
     const next = !settings[key]
     setSettings((prev) => ({ ...prev, [key]: next }))
@@ -176,6 +176,8 @@ export default function App() {
         voiceEnabled={settings.voiceEnabled}
         onToggleSounds={() => toggleSetting('soundsEnabled')}
         onToggleVoice={() => toggleSetting('voiceEnabled')}
+        spicyMode={settings.spicyMode}
+        onToggleSpicy={() => toggleSetting('spicyMode')}
         resume={
           session
             ? {

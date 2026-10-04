@@ -18,6 +18,8 @@ const baseSettings = {
   voiceEnabled: true,
   impostorCount: 1,
   seenHowTo: false,
+  // "Tryb +18" (swearing narrator). Off unless the group opts in.
+  spicyMode: false,
   // themeMode: 'light' | 'dark' — filled in by defaults()
 }
 

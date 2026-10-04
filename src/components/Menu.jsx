@@ -16,6 +16,7 @@ import { L } from '../utils/labels'
 import { MODE_REGISTRY } from '../data/modes'
 import ThemeToggle from './ui/ThemeToggle'
 import SettingToggle from './ui/SettingToggle'
+import SpicyToggle from './ui/SpicyToggle'
 import Button from './ui/Button'
 
 // Iconic dark-navy badge illustrations hand-picked by the user. The dark
@@ -48,6 +49,8 @@ export default function Menu({
   voiceEnabled = true,
   onToggleSounds,
   onToggleVoice,
+  spicyMode = false,
+  onToggleSpicy,
   resume = null,
   onResume,
 }) {
@@ -154,6 +157,7 @@ export default function Menu({
             {onToggleVoice && (
               <SettingToggle kind="voice" on={voiceEnabled} onToggle={onToggleVoice} />
             )}
+            {onToggleSpicy && <SpicyToggle on={spicyMode} onToggle={onToggleSpicy} />}
             <button
               type="button"
               onClick={() => setHowOpen(true)}

@@ -6,7 +6,12 @@
 // so repeated rounds don't sound like a broken record. Used for BOTH the voice
 // and the on-screen headlines, so what you hear is what you read.
 
+import { isSpicy, SPICY, SPICY_SHARE } from './spicy'
+
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+// Clean line, or (only with "Tryb +18" on) usually one from the spicy pool.
+const pickLine = (spicy, clean) =>
+  spicy?.length && isSpicy() && Math.random() < SPICY_SHARE ? pick(spicy) : pick(clean)
 const fill = (tpl, vars) => tpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '')
 
 // Join names the Polish way: "Ala", "Ala i Bob", "Ala, Bob i Cy".
@@ -27,7 +32,7 @@ export function pointsWord(n) {
 
 export function passPhoneLine(name) {
   return fill(
-    pick([
+    pickLine(SPICY.passPhone, [
       '{name}, teraz Ty. Reszta, nie patrzymy!',
       '{name}, ręce na telefon.',
       'Telefon wędruje do: {name}.',
@@ -48,7 +53,7 @@ export function passPhoneLine(name) {
 
 export function speakerLine(name) {
   return fill(
-    pick([
+    pickLine(SPICY.speaker, [
       '{name}, Twoja kolej. Jedno słowo.',
       'Głos ma {name}.',
       '{name}, powiedz coś mądrego. Albo cokolwiek.',
@@ -70,7 +75,7 @@ export function speakerLine(name) {
 // A short aside after the speaker line, now and then, to keep the table laughing.
 export function speakerQuip() {
   if (Math.random() > 0.35) return ''
-  return pick([
+  return pickLine(SPICY.quip, [
     'Impostor już się poci.',
     'Ktoś tu coś ukrywa.',
     'Uwaga na niepewne miny.',
@@ -80,7 +85,7 @@ export function speakerQuip() {
 }
 
 export function voteStartLine() {
-  return pick([
+  return pickLine(SPICY.voteStart, [
     'Czas na głosowanie. Kto tu kłamie?',
     'Głosujemy! Wskażcie winowajcę.',
     'Pora na sąd. Kogo podejrzewacie?',
@@ -115,30 +120,31 @@ export function nudgeLine(n = 0) {
     ],
     ['Dobra, poczekam. Mam całą wieczność.', 'Ciekawe, kto pierwszy zaśnie.'],
   ]
-  return pick(tiers[Math.min(n, tiers.length - 1)])
+  const tier = Math.min(n, tiers.length - 1)
+  return pickLine(SPICY.nudge[Math.min(tier, SPICY.nudge.length - 1)], tiers[tier])
 }
 
 // After hiding the card.
 export function hideLine() {
-  return pick(['Schowane. Podaj dalej, żwawo!', 'Mam to. Dawaj telefon dalej!', 'Zapamiętane. Nie ociągaj się!'])
+  return pickLine(SPICY.hide, ['Schowane. Podaj dalej, żwawo!', 'Mam to. Dawaj telefon dalej!', 'Zapamiętane. Nie ociągaj się!'])
 }
 
 // Start of every round: first round gets a proper welcome.
 export function roundIntroLine(roundIndex, isLastRound) {
   if (roundIndex === 0) {
-    return pick([
+    return pickLine(SPICY.roundFirst, [
       'Zaczynamy grę! Powodzenia i niech wygra najlepszy kłamca.',
       'Zaczynamy! Dziś ktoś tu będzie kłamał.',
       'Gramy! Pamiętajcie: nikomu nie pokazujcie ekranu.',
     ])
   }
   if (isLastRound) {
-    return pick([
+    return pickLine(SPICY.roundLast, [
       'Ostatnia runda! Teraz albo nigdy.',
       'Finałowa runda. Wszystko może się jeszcze zmienić.',
     ])
   }
-  return `Runda ${roundIndex + 1}. ` + pick([
+  return `Runda ${roundIndex + 1}. ` + pickLine(SPICY.roundMid, [
     'Kto tym razem będzie kłamał?',
     'Nowe słowo, nowy impostor.',
     'Ostrzcie języki.',
@@ -147,7 +153,7 @@ export function roundIntroLine(roundIndex, isLastRound) {
 
 // A new describe turn (turn 2, 3...): the table goes around again.
 export function turnLine(turn) {
-  return `Tura ${turn}. ` + pick([
+  return `Tura ${turn}. ` + pickLine(SPICY.turn, [
     'Jedziemy jeszcze raz.',
     'Teraz trzeba się bardziej postarać.',
     'Impostor zaczyna się denerwować.',
@@ -155,7 +161,7 @@ export function turnLine(turn) {
 }
 
 export function decisionLine() {
-  return pick([
+  return pickLine(SPICY.decision, [
     'Co teraz? Głosujemy, jedziemy dalej, czy ktoś chce zgadywać?',
     'Pora na decyzję. Głosowanie, kolejna tura albo strzał impostora.',
     'Ustalcie to między sobą. Głosujemy, czy gramy dalej?',
@@ -163,7 +169,7 @@ export function decisionLine() {
 }
 
 export function cardReminderLine() {
-  return pick([
+  return pickLine(SPICY.cardReminder, [
     'Tylko Ty patrzysz na ekran. Zapamiętaj i schowaj.',
     'Spójrz i zapamiętaj. Nikomu ani słowa.',
     'To tylko dla Ciebie. Miej kamienną twarz.',
@@ -171,7 +177,7 @@ export function cardReminderLine() {
 }
 
 export function voteEntryLine() {
-  return pick([
+  return pickLine(SPICY.voteEntry, [
     'Wybierz po cichu. Nikt nie patrzy.',
     'Kogo podejrzewasz? Stuknij imię.',
     'Głosuj z sercem. I z podejrzliwością.',
@@ -179,7 +185,7 @@ export function voteEntryLine() {
 }
 
 export function guessConfirmLine() {
-  return pick([
+  return pickLine(SPICY.guessConfirm, [
     'Ktoś chce zgadywać? To kończy rundę. Na pewno?',
     'Strzał impostora kończy rundę. Jesteście pewni?',
     'Uwaga! Zgadywanie kończy rundę. Na pewno?',
@@ -187,7 +193,7 @@ export function guessConfirmLine() {
 }
 
 export function guessEntryLine() {
-  return pick([
+  return pickLine(SPICY.guessEntry, [
     'Impostor zgaduje słowo. Reszta, ani pary z ust.',
     'Teraz jedna próba. Wpisz słowo i trzymaj kciuki.',
     'Strzał impostora! Cisza na sali.',
@@ -212,7 +218,7 @@ export function gameOverLine(winners, topScore, runnersUp = [], runnerScore = 0)
       : ''
   if (winners.length > 1) {
     return fill(
-      pick([
+      pickLine(SPICY.gameOverTie, [
         'Mamy remis! {names}, po {score}. Dogrywka sama się nie zagra.',
         'Remis! {names} dzielą zwycięstwo, po {score}.',
       ]),
@@ -220,7 +226,7 @@ export function gameOverLine(winners, topScore, runnersUp = [], runnerScore = 0)
     ) + second
   }
   return fill(
-    pick([
+    pickLine(SPICY.gameOverOne, [
       'Koniec gry! Wygrywa {names} z wynikiem {score}. Reszta może się pocieszać.',
       'Wygrywa {names}! {score}. Gratulacje, geniuszu zbrodni.',
       'Mamy zwycięzcę: {names}, {score}!',
@@ -290,7 +296,15 @@ export function roundHeadline(
       'Pudło! Słowo brzmi: {word}. Impostor chyba zgaduje z sufitu.',
     ],
   }
-  const line = fill(pick(T[kind] || T.escaped), vars)
+  const H = SPICY.headline
+  const spicyFor = {
+    caught: plural ? H.caughtMany : H.caughtOne,
+    escaped: plural ? H.escapedMany : H.escapedOne,
+    partial: H.partial,
+    guessRight: H.guessRight,
+    guessWrong: H.guessWrong,
+  }
+  const line = fill(pickLine(spicyFor[kind] || spicyFor.escaped, T[kind] || T.escaped), vars)
   if (role !== 'kameleon') return line
   // Kameleon mode: same jokes, the odd one out is called "kameleon".
   return line
@@ -307,7 +321,7 @@ export function catchLine(name, remaining) {
       ? 'Został jeszcze jeden.'
       : `Zostało jeszcze ${remaining === 2 ? 'dwóch' : 'trzech'}.`
   return fill(
-    pick([
+    pickLine(SPICY.catch, [
       'Mamy jednego! {name} to impostor. {left}',
       'Trafienie! {name} odpada. {left} Gramy dalej czy głosujemy znowu?',
       'Zdemaskowano: {name}! {left} Nie spoczywajcie na laurach.',
