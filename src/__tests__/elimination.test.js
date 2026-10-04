@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveVote, scoreRound } from '../utils/elimination'
+import { caughtBy, resolveQuickVote, resolveVote, scoreRound } from '../utils/elimination'
 
 // 6 players: a and b are impostors; c, d, e, f are civilians (majority = 3).
 const players = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => ({ id, name: id.toUpperCase() }))
@@ -97,5 +97,42 @@ describe('10 players, 4 impostors', () => {
     const score = scoreRound({ players: ten, impostorIds: imps, voteLog: [r], reason: 'vote-failed' })
     expect(score.deltas).toMatchObject({ a: 0, b: 2, c: 2, d: 2 })
     expect(score.winner).toBe('mixed')
+  })
+})
+
+describe('resolveQuickVote', () => {
+  // 6 players, a and b impostors, 4 civilians -> 3 needed.
+  it('catches both impostors in one pass when the table agrees', () => {
+    const votes = { c: ['a', 'b'], d: ['a', 'b'], e: ['b', 'a'], f: ['a', 'd'], a: ['c', 'd'], b: ['c'] }
+    const r = resolveQuickVote({ votes, impostorIds, civilianCount: 4 })
+    expect(r.caughtIds.sort()).toEqual(['a', 'b'])
+    const score = scoreRound({ players, impostorIds, voteLog: [r], reason: 'all-caught' })
+    expect(score.winner).toBe('civilians')
+    // Same points as two separate votes: +1 per correct pick.
+    expect(score.deltas).toEqual({ a: 0, b: 0, c: 2, d: 2, e: 2, f: 1 })
+  })
+
+  it('catches only the impostors with a majority; the rest stay hidden', () => {
+    const votes = { c: ['a', 'd'], d: ['a', 'e'], e: ['a', 'b'], f: ['b', 'c'] }
+    const r = resolveQuickVote({ votes, impostorIds, civilianCount: 4 })
+    expect(r.caughtIds).toEqual(['a'])
+    expect(caughtBy(r)).toEqual(['a'])
+  })
+
+  it('nobody caught ends like a failed vote; a civilian majority is reported', () => {
+    const votes = { c: ['d', 'e'], d: ['e', 'c'], e: ['d', 'c'], f: ['d', 'e'] }
+    const r = resolveQuickVote({ votes, impostorIds, civilianCount: 4 })
+    expect(r.caughtIds).toEqual([])
+    expect(r.wrongIds.sort()).toEqual(['d', 'e'])
+    expect(r.wrongAccusation).toBe(true)
+    const score = scoreRound({ players, impostorIds, voteLog: [r], reason: 'vote-failed' })
+    expect(score.winner).toBe('impostors')
+  })
+
+  it('ignores impostor votes and duplicate picks', () => {
+    const votes = { a: ['b', 'b'], c: ['b', 'b'], d: ['c'], e: ['c'], f: ['d'] }
+    const r = resolveQuickVote({ votes, impostorIds, civilianCount: 4 })
+    expect(r.counts.b).toBe(1)
+    expect(r.caughtIds).toEqual([])
   })
 })

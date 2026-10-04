@@ -315,11 +315,22 @@ export function roundHeadline(
 
 // After a vote exposes one impostor while others are still hidden.
 // `remaining` is how many are still hidden (1-3: at most 4 impostors).
+// `name` may be a list when a quick vote catches several at once.
 export function catchLine(name, remaining) {
   const left =
     remaining === 1
       ? 'Został jeszcze jeden.'
       : `Zostało jeszcze ${remaining === 2 ? 'dwóch' : 'trzech'}.`
+  if (Array.isArray(name) && name.length > 1) {
+    return fill(
+      pickLine(['Mamy te gnidy! {names} to impostorzy. {left}'], [
+        'Podwójne trafienie! {names} to impostorzy. {left}',
+        'Za jednym zamachem: {names}! {left}',
+      ]),
+      { names: joinNames(name), left }
+    )
+  }
+  if (Array.isArray(name)) name = name[0]
   return fill(
     pickLine(SPICY.catch, [
       'Mamy jednego! {name} to impostor. {left}',

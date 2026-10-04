@@ -12,8 +12,12 @@ import { useFocusHeading } from '../utils/useFocusHeading'
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote, disables all buttons, and calls onVote(targetId).
 // Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
-export default function VoteGrid({ players, voterId, voterName, onVote, accent }) {
+// Quick vote (maxPicks > 1): tap up to maxPicks names, then confirm; onVote
+// receives an array of ids.
+export default function VoteGrid({ players, voterId, voterName, onVote, accent, maxPicks = 1 }) {
   const [voted, setVoted] = useState(false)
+  const [picked, setPicked] = useState([])
+  const multi = maxPicks > 1
   const headingRef = useFocusHeading()
   useEffect(() => speak(voteEntryLine(), { delay: 300 }), [])
   useNudge(!voted, { after: 15000 })
@@ -22,10 +26,28 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
 
   const handleVote = (targetId) => {
     if (voted) return
+    if (multi) {
+      hapticMedium()
+      setPicked((cur) =>
+        cur.includes(targetId)
+          ? cur.filter((id) => id !== targetId)
+          : cur.length < maxPicks
+            ? [...cur, targetId]
+            : cur
+      )
+      return
+    }
     setVoted(true)
     hapticMedium()
     playSound('vote')
     onVote(targetId)
+  }
+
+  const confirmPicks = () => {
+    if (voted || picked.length === 0) return
+    setVoted(true)
+    playSound('vote')
+    onVote(picked)
   }
 
   return (
@@ -82,7 +104,7 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
           fontWeight: fontWeights.semibold,
         }}
       >
-        {L.vote.instruction}
+        {multi ? `Szybkie głosowanie: stuknij do ${maxPicks} osób` : L.vote.instruction}
       </p>
 
       <div
@@ -95,7 +117,8 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
         {candidates.map((p, idx) => (
           <Button
             key={p.id}
-            variant="secondary"
+            variant={picked.includes(p.id) ? 'primary' : 'secondary'}
+            ariaPressed={multi ? picked.includes(p.id) : undefined}
             size="lg"
             accentColor={accent || colors.textPrimary}
             fullWidth
@@ -118,6 +141,20 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent }
           </Button>
         ))}
       </div>
+
+      {multi && !voted && (
+        <Button
+          variant="primary"
+          size="lg"
+          accentColor={colors.success}
+          fullWidth
+          disabled={picked.length === 0}
+          onClick={confirmPicks}
+          style={{ marginTop: spacing.lg }}
+        >
+          Zatwierdź ({picked.length}/{maxPicks})
+        </Button>
+      )}
 
       {voted && (
         <div

@@ -20,7 +20,7 @@ import {
 import { pickImpostors, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import { compareWordGuess } from '../../utils/scoring'
-import { resolveVote, scoreRound } from '../../utils/elimination'
+import { caughtBy, resolveQuickVote, resolveVote, scoreRound } from '../../utils/elimination'
 import { playSound } from '../../utils/sounds'
 import { speak } from '../../utils/voice'
 import {
@@ -69,6 +69,8 @@ export default function ModeClassic({
   const [turn, setTurn] = useState(1)
   const [voteIdx, setVoteIdx] = useState(0)
   const [votes, setVotes] = useState({})
+  // Quick vote: everyone names every impostor in one pass (obvious rounds).
+  const [quickVote, setQuickVote] = useState(false)
   const [guessText, setGuessText] = useState('')
   // Where "Wróć" goes if the table backs out of an impostor guess.
   const guessReturnRef = useRef('decision')
@@ -76,7 +78,7 @@ export default function ModeClassic({
   const [caughtIds, setCaughtIds] = useState([])
   const [voteLog, setVoteLog] = useState([])
   const [endReason, setEndReason] = useState(null)
-  const [lastCatchId, setLastCatchId] = useState(null)
+  const [lastCatchIds, setLastCatchIds] = useState(null)
   const spokenCatchRef = useRef(null)
 
   const reactId = useId()
@@ -108,9 +110,9 @@ export default function ModeClassic({
     }
     if (phase === 'decision') {
       // Announce a fresh catch once; afterwards the usual "what now?".
-      if (lastCatchId && spokenCatchRef.current !== lastCatchId) {
-        spokenCatchRef.current = lastCatchId
-        return speak(catchLine(nameOf(lastCatchId), hiddenCount))
+      if (lastCatchIds && spokenCatchRef.current !== lastCatchIds) {
+        spokenCatchRef.current = lastCatchIds
+        return speak(catchLine(lastCatchIds.map(nameOf), hiddenCount))
       }
       return speak(decisionLine())
     }
@@ -361,9 +363,9 @@ export default function ModeClassic({
           {L.classic.whatNextHint}
         </p>
 
-        {lastCatchId && (
+        {lastCatchIds && (
           <div
-            key={lastCatchId}
+            key={lastCatchIds.join()}
             role="status"
             className="anim-bounce"
             style={{
@@ -375,10 +377,10 @@ export default function ModeClassic({
             }}
           >
             <div style={{ fontSize: fontSizes.h3, fontWeight: fontWeights.black, lineHeight: 1.15 }}>
-              Mamy: {nameOf(lastCatchId)}!
+              Mamy: {joinNames(lastCatchIds.map(nameOf))}!
             </div>
             <div style={{ fontSize: fontSizes.body, fontWeight: fontWeights.bold, marginTop: spacing.xs }}>
-              To impostor. {hiddenCount === 1 ? 'Został jeszcze jeden.' : `Zostało jeszcze ${hiddenCount}.`}
+              {lastCatchIds.length > 1 ? 'To impostorzy.' : 'To impostor.'} {hiddenCount === 1 ? 'Został jeszcze jeden.' : `Zostało jeszcze ${hiddenCount}.`}
             </div>
           </div>
         )}
@@ -391,7 +393,8 @@ export default function ModeClassic({
             shadowColor={accentShadow}
             fullWidth
             onClick={() => {
-              setLastCatchId(null)
+              setLastCatchIds(null)
+              setQuickVote(false)
               setVoteIdx(0)
               setVotes({})
               setPhase('vote-handoff')
@@ -400,6 +403,24 @@ export default function ModeClassic({
             {caughtIds.length > 0 ? 'Głosujemy na następnego' : L.classic.callVote}
           </Button>
 
+          {hiddenCount > 1 && (
+            <Button
+              variant="secondary"
+              size="lg"
+              accentColor={accent}
+              fullWidth
+              onClick={() => {
+                setLastCatchIds(null)
+                setQuickVote(true)
+                setVoteIdx(0)
+                setVotes({})
+                setPhase('vote-handoff')
+              }}
+            >
+              ⚡ Wszyscy wiedzą? Głosuj na {hiddenCount} naraz
+            </Button>
+          )}
+
           {turn < MAX_TURNS && (
             <Button
               variant="secondary"
@@ -407,7 +428,7 @@ export default function ModeClassic({
               accentColor={accent}
               fullWidth
               onClick={() => {
-                setLastCatchId(null)
+                setLastCatchIds(null)
                 setTurn(turn + 1)
                 setSpeakerIdx(0)
                 setPhase('describe')
@@ -438,7 +459,13 @@ export default function ModeClassic({
       <PrivacyHandoff
         playerName={currentVoter.name}
         step={`${voteIdx + 1} / ${voterSeats.length}`}
-        intro={voteIdx === 0 ? voteStartLine() : undefined}
+        intro={
+          voteIdx === 0
+            ? quickVote
+              ? `Szybkie głosowanie! Każdy wskazuje do ${hiddenCount} osób naraz.`
+              : voteStartLine()
+            : undefined
+        }
         onReady={() => setPhase('vote-entry')}
       />
     )
@@ -451,26 +478,32 @@ export default function ModeClassic({
         voterId={currentVoter.id}
         voterName={currentVoter.name}
         accent={accent}
+        maxPicks={quickVote ? hiddenCount : 1}
         onVote={(targetId) => {
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
           const nextIdx = voteIdx + 1
           if (nextIdx >= voterSeats.length) {
-            // Everyone voted: this vote can expose at most ONE impostor.
-            const outcome = resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
+            // Everyone voted: a normal vote exposes at most ONE impostor, a
+            // quick vote every impostor the civilians agree on.
+            const outcome = quickVote
+              ? resolveQuickVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
+              : resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
+            const newlyCaught = caughtBy(outcome)
+            const nextCaught = [...caughtIds, ...newlyCaught]
             setVoteLog((log) => [...log, outcome])
-            if (!outcome.caughtId) {
+            if (newlyCaught.length === 0) {
               setEndReason('vote-failed')
               setPhase('round-end')
-            } else if (caughtIds.length + 1 >= impostorIds.length) {
-              setCaughtIds([...caughtIds, outcome.caughtId])
+            } else if (nextCaught.length >= impostorIds.length) {
+              setCaughtIds(nextCaught)
               setEndReason('all-caught')
               setPhase('round-end')
             } else {
-              // Caught one, more are hidden: the table plays on or votes again.
+              // Caught some, more are hidden: the table plays on or votes again.
               playSound('correct')
-              setCaughtIds([...caughtIds, outcome.caughtId])
-              setLastCatchId(outcome.caughtId)
+              setCaughtIds(nextCaught)
+              setLastCatchIds(newlyCaught)
               setSpeakerIdx(0)
               setPhase('decision')
             }
@@ -636,6 +669,13 @@ export default function ModeClassic({
     const facts = voteLog.map((v, i) => {
       const label = voteLog.length > 1 ? `Głosowanie ${i + 1}: ` : ''
       const hits = v.hitVoterIds.length
+      if (v.quick) {
+        const got = v.caughtIds.map((id) => `${nameOf(id)} (${v.counts[id]} z ${civilianCount})`)
+        const wrong = v.wrongIds.length ? `; wskazano też: ${joinNames(v.wrongIds.map(nameOf))} — to nie impostor` : ''
+        if (got.length) return `${label}szybkie głosowanie, złapano: ${got.join(', ')}${wrong}`
+        if (v.wrongIds.length) return `${label}szybkie głosowanie: ${joinNames(v.wrongIds.map(nameOf))} — to nie impostor!`
+        return `${label}szybkie głosowanie: brak większości (trzeba było ${v.needed} z ${civilianCount} cywili)`
+      }
       if (v.caughtId) return `${label}złapano: ${nameOf(v.caughtId)} (${hits} z ${civilianCount} cywili)`
       if (v.wrongAccusation) return `${label}wskazano: ${nameOf(v.accusedId)} — a to nie impostor!`
       return `${label}${v.tie ? 'głosy po równo' : 'brak większości'} (trzeba było ${v.needed} z ${civilianCount} cywili)`
@@ -651,8 +691,8 @@ export default function ModeClassic({
     const voteRows = lastVote
       ? Object.entries(lastVote.votes).map(([voterId, target]) => ({
           voter: nameOf(voterId),
-          target: nameOf(target),
-          hit: impostorIds.includes(target) && !impostorIds.includes(voterId),
+          target: [].concat(target).map(nameOf).join(', '),
+          hit: [].concat(target).some((t) => impostorIds.includes(t)) && !impostorIds.includes(voterId),
           votesReceived: lastVote.counts[voterId] || 0,
         }))
       : undefined

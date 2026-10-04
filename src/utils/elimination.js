@@ -42,12 +42,52 @@ export function resolveVote({ votes, impostorIds, caughtIds = [], civilianCount 
   }
 }
 
+// Quick vote: when the table is sure who all the impostors are, everyone names
+// up to `hidden` suspects in ONE pass instead of voting once per impostor.
+// `votes` is { voterId: [targetId, ...] }. Every hidden impostor named by more
+// than half of the civilians is caught at once; a civilian who reaches a
+// majority is only reported. Catching nobody ends the round as usual.
+// Points are the same as separate votes: +1 per civilian per caught impostor.
+export function resolveQuickVote({ votes, impostorIds, caughtIds = [], civilianCount }) {
+  const hidden = impostorIds.filter((id) => !caughtIds.includes(id))
+  const needed = votesNeededToCatch(civilianCount)
+  const counts = {}
+  for (const [voterId, targets] of Object.entries(votes)) {
+    if (impostorIds.includes(voterId)) continue
+    for (const t of new Set(targets)) counts[t] = (counts[t] || 0) + 1
+  }
+  const majority = Object.keys(counts).filter((id) => counts[id] >= needed)
+  const caught = hidden.filter((id) => majority.includes(id))
+  const wrongIds = majority.filter((id) => !impostorIds.includes(id))
+  const hitVoterIds = []
+  for (const [voterId, targets] of Object.entries(votes)) {
+    if (impostorIds.includes(voterId)) continue
+    for (const t of new Set(targets)) if (caught.includes(t)) hitVoterIds.push(voterId)
+  }
+  return {
+    quick: true,
+    caughtIds: caught,
+    caughtId: caught[0] || null,
+    wrongIds,
+    wrongAccusation: caught.length === 0 && wrongIds.length > 0,
+    accusedId: wrongIds[0] || null,
+    tie: false,
+    needed,
+    counts,
+    hitVoterIds,
+    votes,
+  }
+}
+
+// Every impostor caught by a log entry (a quick vote can catch several).
+export const caughtBy = (v) => v.caughtIds || (v.caughtId ? [v.caughtId] : [])
+
 // Final scoring for the round.
 //   voteLog: results of resolveVote, in order
 //   reason:  'all-caught' | 'vote-failed' | 'guess-right' | 'guess-wrong'
 export function scoreRound({ players, impostorIds, voteLog, reason }) {
   const deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-  const caughtIds = voteLog.map((v) => v.caughtId).filter(Boolean)
+  const caughtIds = voteLog.flatMap(caughtBy)
   const hiddenIds = impostorIds.filter((id) => !caughtIds.includes(id))
   const civilianIds = players.map((p) => p.id).filter((id) => !impostorIds.includes(id))
 
