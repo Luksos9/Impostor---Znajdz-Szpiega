@@ -35,6 +35,7 @@ export default function Button({
   children,
   type = 'button',
   ariaLabel,
+  ariaPressed,
   soundKey = 'tap',
   style: extraStyle,
 }) {
@@ -142,6 +143,7 @@ export default function Button({
         onClick={disabled ? undefined : (e) => { ensureAudioContext(); hapticLight(); playSound(soundKey); onClick?.(e) }}
         disabled={disabled}
         aria-label={ariaLabel}
+        aria-pressed={ariaPressed}
         style={baseStyle}
       >
         {children}
