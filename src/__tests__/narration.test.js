@@ -76,6 +76,7 @@ describe('multi-impostor lines', () => {
     for (let i = 0; i < 30; i++) {
       expect(catchLine('Ewa', 1)).toMatch(/Ewa.*jeszcze jeden/)
       expect(catchLine('Ewa', 2)).toMatch(/jeszcze dwóch/)
+      expect(catchLine('Ewa', 3)).toMatch(/jeszcze trzech/)
     }
   })
 

@@ -300,9 +300,12 @@ export function roundHeadline(
 }
 
 // After a vote exposes one impostor while others are still hidden.
-// `remaining` is how many are still hidden (1 or 2 — at most 3 impostors).
+// `remaining` is how many are still hidden (1-3: at most 4 impostors).
 export function catchLine(name, remaining) {
-  const left = remaining === 1 ? 'Został jeszcze jeden.' : 'Zostało jeszcze dwóch.'
+  const left =
+    remaining === 1
+      ? 'Został jeszcze jeden.'
+      : `Zostało jeszcze ${remaining === 2 ? 'dwóch' : 'trzech'}.`
   return fill(
     pick([
       'Mamy jednego! {name} to impostor. {left}',

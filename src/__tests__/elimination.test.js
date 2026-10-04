@@ -85,3 +85,17 @@ describe('scoreRound', () => {
     expect(r.deltas).toEqual({ a: 0, b: 0, c: 1, d: 1, e: 1, f: 1 })
   })
 })
+
+describe('10 players, 4 impostors', () => {
+  const ten = 'abcdefghij'.split('').map((id) => ({ id, name: id }))
+  const imps = ['a', 'b', 'c', 'd'] // civilians e..j (6) -> 4 votes needed
+  it('needs 4 of 6 civilians and catches one at a time', () => {
+    const civVotes = (target, n) => Object.fromEntries('efghij'.split('').map((v, i) => [v, i < n ? target : 'e']))
+    expect(resolveVote({ votes: civVotes('a', 3), impostorIds: imps, civilianCount: 6 }).caughtId).toBeNull()
+    const r = resolveVote({ votes: civVotes('a', 4), impostorIds: imps, civilianCount: 6 })
+    expect(r.caughtId).toBe('a')
+    const score = scoreRound({ players: ten, impostorIds: imps, voteLog: [r], reason: 'vote-failed' })
+    expect(score.deltas).toMatchObject({ a: 0, b: 2, c: 2, d: 2 })
+    expect(score.winner).toBe('mixed')
+  })
+})
