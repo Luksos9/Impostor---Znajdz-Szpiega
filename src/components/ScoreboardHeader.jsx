@@ -162,6 +162,8 @@ export default function ScoreboardHeader({
           themeMode={settings.themeMode}
           onToggleSounds={() => onToggleSetting('soundsEnabled')}
           onToggleVoice={() => onToggleSetting('voiceEnabled')}
+          spicyMode={settings.spicyMode}
+          onToggleSpicy={() => onToggleSetting('spicyMode')}
           onToggleTheme={onToggleTheme}
           onClose={() => setSettingsOpen(false)}
         />
