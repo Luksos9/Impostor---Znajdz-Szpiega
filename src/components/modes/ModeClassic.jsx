@@ -19,11 +19,9 @@ import {
 } from '../../styles/theme'
 import { pickImpostors, makeSpeakerOrder } from '../../utils/players'
 import { pickContent } from '../../utils/content'
-import {
-  awardImpostorWordGuess,
-  compareWordGuess,
-  awardCivilians,
-} from '../../utils/scoring'
+import { compareWordGuess } from '../../utils/scoring'
+import { resolveVote, scoreRound } from '../../utils/elimination'
+import { playSound } from '../../utils/sounds'
 import { speak } from '../../utils/voice'
 import {
   roundHeadline,
@@ -34,9 +32,11 @@ import {
   turnLine,
   decisionLine,
   guessEntryLine,
+  catchLine,
+  partnersLine,
+  joinNames,
 } from '../../utils/narration'
 import { useNudge } from '../../utils/useNudge'
-import { buildVoteSummary } from '../../utils/roundSummary'
 import { L, t } from '../../utils/labels'
 
 const MAX_TURNS = 3
@@ -44,6 +44,10 @@ const MODE_ID = 'classic'
 
 // Klasyczny impostor: the hero mode.
 // Flow: reveal → describe (N turns, rotation) → decision → vote or guess → result
+//
+// Several impostors know each other (shown on their private card) and are
+// caught ONE AT A TIME: each vote exposes at most one player; after a catch the
+// table plays on or votes again for the next. See utils/elimination.js.
 export default function ModeClassic({
   players,
   roundIndex,
@@ -68,6 +72,12 @@ export default function ModeClassic({
   const [guessText, setGuessText] = useState('')
   // Where "Wróć" goes if the table backs out of an impostor guess.
   const guessReturnRef = useRef('decision')
+  // One-at-a-time catching: who is out, every vote so far, and why it ended.
+  const [caughtIds, setCaughtIds] = useState([])
+  const [voteLog, setVoteLog] = useState([])
+  const [endReason, setEndReason] = useState(null)
+  const [lastCatchId, setLastCatchId] = useState(null)
+  const spokenCatchRef = useRef(null)
 
   const reactId = useId()
   const safeId = reactId.replace(/:/g, '')
@@ -76,19 +86,32 @@ export default function ModeClassic({
   const accent = colorForMode(MODE_ID)
   const accentShadow = colorForModeShadow(MODE_ID)
   const currentRevealPlayer = players.find((p) => p.id === speakerOrder[revealIdx])
-  const currentSpeaker = players.find((p) => p.id === speakerOrder[speakerIdx])
-  const currentVoter = players.find((p) => p.id === speakerOrder[voteIdx])
+  // Caught impostors leave the table: they no longer speak or vote.
+  const activeOrder = speakerOrder.filter((id) => !caughtIds.includes(id))
+  const activePlayers = players.filter((p) => !caughtIds.includes(p.id))
+  const civilianCount = players.length - impostorIds.length
+  const hiddenCount = impostorIds.length - caughtIds.length
+  const nameOf = (id) => players.find((p) => p.id === id)?.name || ''
+  const currentSpeaker = players.find((p) => p.id === activeOrder[speakerIdx])
+  const currentVoter = players.find((p) => p.id === activeOrder[voteIdx])
 
   // Narrator: announce each speaker, each new turn, the decision and the guess.
   useEffect(() => {
     if (phase === 'describe') {
-      const speaker = players.find((p) => p.id === speakerOrder[speakerIdx])
+      const speaker = players.find((p) => p.id === activeOrder[speakerIdx])
       if (!speaker) return undefined
       const prefix = speakerIdx === 0 && turn > 1 ? `${turnLine(turn)} ` : ''
       return speak(`${prefix}${speakerLine(speaker.name)} ${speakerQuip()}`.trim())
     }
-    if (phase === 'decision') return speak(decisionLine())
-      if (phase === 'guess-entry') return speak(guessEntryLine())
+    if (phase === 'decision') {
+      // Announce a fresh catch once; afterwards the usual "what now?".
+      if (lastCatchId && spokenCatchRef.current !== lastCatchId) {
+        spokenCatchRef.current = lastCatchId
+        return speak(catchLine(nameOf(lastCatchId), hiddenCount))
+      }
+      return speak(decisionLine())
+    }
+    if (phase === 'guess-entry') return speak(guessEntryLine())
     return undefined
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, speakerIdx, turn])
@@ -125,6 +148,12 @@ export default function ModeClassic({
         secret={isImp ? L.card.youAreImpostor : content.word}
         // Civilians see only the word — a category line just confuses people.
         hint={isImp ? L.card.youAreImpostorHint : undefined}
+        // Impostors see who their partners are (only on this private card).
+        partners={
+          isImp && impostorIds.length > 1
+            ? partnersLine(impostorIds.filter((id) => id !== currentRevealPlayer.id).map(nameOf))
+            : undefined
+        }
         accent={accent}
         onHide={() => {
           const nextIdx = revealIdx + 1
@@ -247,7 +276,7 @@ export default function ModeClassic({
             shadowColor={accentShadow}
             onClick={() => {
               const nextSpeakerIdx = speakerIdx + 1
-              if (nextSpeakerIdx >= players.length) {
+              if (nextSpeakerIdx >= activeOrder.length) {
                 setPhase('decision')
               } else {
                 setSpeakerIdx(nextSpeakerIdx)
@@ -255,7 +284,7 @@ export default function ModeClassic({
             }}
             style={{ minWidth: 240 }}
           >
-            {speakerIdx === players.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
+            {speakerIdx === activeOrder.length - 1 ? 'Koniec tury' : L.classic.nextPlayer}
           </Button>
         </div>
 
@@ -328,6 +357,28 @@ export default function ModeClassic({
           {L.classic.whatNextHint}
         </p>
 
+        {lastCatchId && (
+          <div
+            key={lastCatchId}
+            role="status"
+            className="anim-bounce"
+            style={{
+              background: colors.success,
+              color: '#FFFFFF',
+              borderRadius: radii.xl,
+              padding: `${spacing.md}px ${spacing.lg}px`,
+              marginBottom: spacing.lg,
+            }}
+          >
+            <div style={{ fontSize: fontSizes.h3, fontWeight: fontWeights.black, lineHeight: 1.15 }}>
+              Mamy: {nameOf(lastCatchId)}!
+            </div>
+            <div style={{ fontSize: fontSizes.body, fontWeight: fontWeights.bold, marginTop: spacing.xs }}>
+              To impostor. {hiddenCount === 1 ? 'Został jeszcze jeden.' : `Zostało jeszcze ${hiddenCount}.`}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
           <Button
             variant="primary"
@@ -336,12 +387,13 @@ export default function ModeClassic({
             shadowColor={accentShadow}
             fullWidth
             onClick={() => {
+              setLastCatchId(null)
               setVoteIdx(0)
               setVotes({})
               setPhase('vote-handoff')
             }}
           >
-            {L.classic.callVote}
+            {caughtIds.length > 0 ? 'Głosujemy na następnego' : L.classic.callVote}
           </Button>
 
           {turn < MAX_TURNS && (
@@ -351,6 +403,7 @@ export default function ModeClassic({
               accentColor={accent}
               fullWidth
               onClick={() => {
+                setLastCatchId(null)
                 setTurn(turn + 1)
                 setSpeakerIdx(0)
                 setPhase('describe')
@@ -389,7 +442,7 @@ export default function ModeClassic({
   if (phase === 'vote-entry') {
     return (
       <VoteGrid
-        players={players}
+        players={activePlayers}
         voterId={currentVoter.id}
         voterName={currentVoter.name}
         accent={accent}
@@ -397,8 +450,25 @@ export default function ModeClassic({
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
           const nextIdx = voteIdx + 1
-          if (nextIdx >= players.length) {
-            setPhase('vote-result')
+          if (nextIdx >= activeOrder.length) {
+            // Everyone voted: this vote can expose at most ONE impostor.
+            const outcome = resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
+            setVoteLog((log) => [...log, outcome])
+            if (!outcome.caughtId) {
+              setEndReason('vote-failed')
+              setPhase('round-end')
+            } else if (caughtIds.length + 1 >= impostorIds.length) {
+              setCaughtIds([...caughtIds, outcome.caughtId])
+              setEndReason('all-caught')
+              setPhase('round-end')
+            } else {
+              // Caught one, more are hidden: the table plays on or votes again.
+              playSound('correct')
+              setCaughtIds([...caughtIds, outcome.caughtId])
+              setLastCatchId(outcome.caughtId)
+              setSpeakerIdx(0)
+              setPhase('decision')
+            }
           } else {
             setVoteIdx(nextIdx)
             setPhase('vote-handoff')
@@ -516,7 +586,8 @@ export default function ModeClassic({
           disabled={!guessText.trim()}
           onClick={() => {
             hapticHeavy()
-            setPhase('result')
+            setEndReason(compareWordGuess(guessText, content.word) ? 'guess-right' : 'guess-wrong')
+            setPhase('round-end')
           }}
         >
           {L.classic.submitGuess}
@@ -528,73 +599,71 @@ export default function ModeClassic({
     )
   }
 
-  // Vote result: apply scoring based on votes.
-  if (phase === 'vote-result') {
-    const { caught, deltas, facts, voteRows, impostorNames } = buildVoteSummary({
+  // Round over: score every impostor on their own (see utils/elimination.js).
+  if (phase === 'round-end') {
+    const { deltas, winner, caughtIds: caught, hiddenIds } = scoreRound({
       players,
-      votes,
       impostorIds,
+      voteLog,
+      reason: endReason,
     })
-    const headline = roundHeadline(caught ? 'caught' : 'escaped', {
-      impostorNames,
-      plural: impostorIds.length > 1,
+    const plural = impostorIds.length > 1
+    const guessed = endReason === 'guess-right' || endReason === 'guess-wrong'
+
+    let headline
+    if (guessed) {
+      headline = roundHeadline(endReason === 'guess-right' ? 'guessRight' : 'guessWrong', {
+        word: content.word,
+        plural,
+      })
+    } else if (endReason === 'all-caught') {
+      headline = roundHeadline('caught', { impostorNames: impostorIds.map(nameOf), plural })
+    } else if (caught.length > 0) {
+      headline = roundHeadline('partial', {
+        caughtNames: caught.map(nameOf),
+        escapedNames: hiddenIds.map(nameOf),
+      })
+    } else {
+      headline = roundHeadline('escaped', { impostorNames: impostorIds.map(nameOf), plural })
+    }
+
+    // Plain-language story: each vote, then how the points were earned.
+    const facts = voteLog.map((v, i) => {
+      const label = voteLog.length > 1 ? `Głosowanie ${i + 1}: ` : ''
+      const hits = v.hitVoterIds.length
+      if (v.caughtId) return `${label}złapano: ${nameOf(v.caughtId)} (${hits} z ${civilianCount} cywili)`
+      if (v.wrongAccusation) return `${label}wskazano: ${nameOf(v.accusedId)} — a to nie impostor!`
+      return `${label}${v.tie ? 'głosy po równo' : 'brak większości'} (trzeba było ${v.needed} z ${civilianCount} cywili)`
     })
+    if (guessed) facts.push(`Impostor zgaduje: „${guessText.trim()}”`)
+    if (voteLog.some((v) => v.hitVoterIds.length)) facts.push('Cywile dostają po +1 pkt za każdy trafny głos')
+    if (endReason === 'vote-failed' && hiddenIds.length)
+      facts.push(`${joinNames(hiddenIds.map(nameOf))}: +2 pkt za przetrwanie`)
+    if (endReason === 'guess-right') facts.push(`${joinNames(hiddenIds.map(nameOf))}: +3 pkt za trafione słowo`)
+    if (endReason === 'guess-wrong') facts.push('Cywile dostają po +1 pkt za zdemaskowanie')
+
+    const lastVote = voteLog[voteLog.length - 1]
+    const voteRows = lastVote
+      ? Object.entries(lastVote.votes).map(([voterId, target]) => ({
+          voter: nameOf(voterId),
+          target: nameOf(target),
+          hit: impostorIds.includes(target) && !impostorIds.includes(voterId),
+          votesReceived: lastVote.counts[voterId] || 0,
+        }))
+      : undefined
 
     return (
       <RoundResult
         impostorIds={impostorIds}
+        caughtIds={caught}
         players={players}
         deltas={deltas}
-        winner={caught ? 'civilians' : 'impostors'}
+        winner={winner}
         headline={headline}
-        speech={`${headline} Tajne słowo: ${content.word}.`}
+        speech={guessed ? headline : `${headline} Tajne słowo: ${content.word}.`}
         secret={{ label: 'Tajne słowo', value: content.word }}
         facts={facts}
         voteRows={voteRows}
-        isLastRound={isLastRound}
-        onNext={() =>
-          onRoundComplete({
-            modeId: MODE_ID,
-            impostorIds,
-            deltas,
-            summary: headline,
-            usedContentId: content.id,
-          })
-        }
-      />
-    )
-  }
-
-  if (phase === 'result') {
-    // Impostor guess result.
-    const correct = compareWordGuess(guessText, content.word)
-    let deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
-    if (correct) {
-      deltas = awardImpostorWordGuess(deltas, impostorIds, 3)
-    } else {
-      deltas = awardCivilians(deltas, players.map((p) => p.id), impostorIds, 1)
-    }
-    const headline = roundHeadline(correct ? 'guessRight' : 'guessWrong', {
-      word: content.word,
-      plural: impostorIds.length > 1,
-    })
-    const facts = [
-      `Impostor zgaduje: „${guessText.trim()}”`,
-      correct
-        ? `Impostor${impostorIds.length > 1 ? 'zy dostają' : ' dostaje'} +3 pkt za trafione słowo`
-        : 'Cywile dostają po +1 pkt za zdemaskowanie',
-    ]
-
-    return (
-      <RoundResult
-        impostorIds={impostorIds}
-        players={players}
-        deltas={deltas}
-        winner={correct ? 'impostors' : 'civilians'}
-        headline={headline}
-        speech={headline}
-        secret={{ label: 'Tajne słowo', value: content.word }}
-        facts={facts}
         isLastRound={isLastRound}
         onNext={() =>
           onRoundComplete({

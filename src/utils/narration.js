@@ -235,9 +235,20 @@ export function gameOverLine(winners, topScore, runnersUp = [], runnerScore = 0)
 //   escaped       – the table voted wrong / split
 //   guessRight    – impostor guessed the secret word
 //   guessWrong    – impostor tried and failed
-export function roundHeadline(kind, { impostorNames = [], word = '', plural = false, role = 'impostor' } = {}) {
+export function roundHeadline(
+  kind,
+  { impostorNames = [], word = '', plural = false, role = 'impostor', caughtNames = [], escapedNames = [] } = {}
+) {
   const names = joinNames(impostorNames)
-  const vars = { names, word, win: plural ? 'Impostorzy wygrywają.' : 'Impostor wygrywa.' }
+  const vars = {
+    names,
+    word,
+    win: plural ? 'Impostorzy wygrywają.' : 'Impostor wygrywa.',
+    caught: joinNames(caughtNames),
+    escaped: joinNames(escapedNames),
+    escapes: escapedNames.length > 1 ? 'wychodzą' : 'wychodzi',
+    falls: caughtNames.length > 1 ? 'wpadają' : 'wpada',
+  }
   const T = {
     caught: plural
       ? [
@@ -262,6 +273,12 @@ export function roundHeadline(kind, { impostorNames = [], word = '', plural = fa
           'Pudło! Cywile nie wiedzą, kto kłamie, a {names} się uśmiecha.',
           'Cywile głosują, a {names} ucieka bez szwanku.',
         ],
+    // Several impostors: some caught one by one, the rest got away.
+    partial: [
+      '{caught} {falls}, ale {escaped} {escapes} z tego cało!',
+      'Pół na pół: {caught} w areszcie, a {escaped} {escapes} na wolność.',
+      'Cywile łapią: {caught}. Ale {escaped} {escapes} bez szwanku!',
+    ],
     guessRight: [
       'Impostor trafia w słowo: {word}! {win}',
       'Ale jazda! Impostor zgaduje: {word}. Dobry nos.',
@@ -280,4 +297,26 @@ export function roundHeadline(kind, { impostorNames = [], word = '', plural = fa
     .replace(/impostorze/g, 'kameleonie')
     .replace(/Impostor/g, 'Kameleon')
     .replace(/impostor/g, 'kameleon')
+}
+
+// After a vote exposes one impostor while others are still hidden.
+// `remaining` is how many are still hidden (1 or 2 — at most 3 impostors).
+export function catchLine(name, remaining) {
+  const left = remaining === 1 ? 'Został jeszcze jeden.' : 'Zostało jeszcze dwóch.'
+  return fill(
+    pick([
+      'Mamy jednego! {name} to impostor. {left}',
+      'Trafienie! {name} odpada. {left} Gramy dalej czy głosujemy znowu?',
+      'Zdemaskowano: {name}! {left} Nie spoczywajcie na laurach.',
+    ]),
+    { name, left }
+  )
+}
+
+// On an impostor's card when there is more than one: who the partners are.
+export function partnersLine(names) {
+  if (names.length === 0) return ''
+  return names.length === 1
+    ? `Drugi impostor: ${names[0]}`
+    : `Pozostali impostorzy: ${joinNames(names)}`
 }

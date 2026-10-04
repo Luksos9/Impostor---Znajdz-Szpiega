@@ -26,7 +26,9 @@ import { useNudge } from '../utils/useNudge'
 //   hint:    optional subline (e.g. the hint shown to the impostor)
 //   accent:  hex color                      mode accent used for the secondary CTA
 //   onHide:  called after the second tap
-export default function CardReveal({ role, label, secret, hint, accent, onHide }) {
+//   partners: optional line shown only on this private card, e.g. who the
+//            other impostors are ("Drugi impostor: Ala")
+export default function CardReveal({ role, label, secret, hint, partners, accent, onHide }) {
   const [hidden, setHidden] = useState(false)
   const roleColor = colorForRole(role)
 
@@ -121,6 +123,24 @@ export default function CardReveal({ role, label, secret, hint, accent, onHide }
                 }}
               >
                 {hint}
+              </div>
+            )}
+            {partners && (
+              <div
+                className="anim-bounce"
+                style={{
+                  marginTop: spacing.lg,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: 12,
+                  background: `${roleColor}1A`,
+                  border: `2px solid ${roleColor}`,
+                  fontSize: fontSizes.bodyLg,
+                  fontWeight: fontWeights.black,
+                  color: colors.textPrimary,
+                  animationDelay: '300ms',
+                }}
+              >
+                {partners}
               </div>
             )}
           </Card>
