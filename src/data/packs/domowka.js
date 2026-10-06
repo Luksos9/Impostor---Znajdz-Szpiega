@@ -21,7 +21,7 @@ export const DOMOWKA = {
       { id: 'classic-domowka-008', word: 'BIGOS', category: 'Jedzenie' },
       { id: 'classic-domowka-009', word: 'ŻUREK', category: 'Jedzenie' },
       { id: 'classic-domowka-010', word: 'OSCYPEK', category: 'Jedzenie' },
-      { id: 'classic-domowka-011', word: 'OGÓREK KISZONY', category: 'Jedzenie' },
+      { id: 'classic-domowka-011', word: 'OGÓREK', category: 'Jedzenie' },
       { id: 'classic-domowka-012', word: 'PARÓWKA', category: 'Jedzenie' },
       { id: 'classic-domowka-013', word: 'ZAPIEKANKA', category: 'Jedzenie' },
       { id: 'classic-domowka-014', word: 'HAMBURGER', category: 'Jedzenie' },
@@ -40,7 +40,7 @@ export const DOMOWKA = {
       { id: 'classic-domowka-023', word: 'BIEDRONKA', category: 'Miejsce' },
       { id: 'classic-domowka-024', word: 'MONOPOLOWY', category: 'Miejsce' },
       { id: 'classic-domowka-025', word: 'BALKON', category: 'Miejsce' },
-      { id: 'classic-domowka-026', word: 'KLATKA SCHODOWA', category: 'Miejsce' },
+      { id: 'classic-domowka-026', word: 'DOMOFON', category: 'Miejsce' },
       { id: 'classic-domowka-027', word: 'AKADEMIK', category: 'Miejsce' },
       { id: 'classic-domowka-028', word: 'DZIAŁKA', category: 'Miejsce' },
 
@@ -83,7 +83,7 @@ export const DOMOWKA = {
       { id: 'classic-domowka-056', word: 'IMIENINY', category: 'Święto' },
 
       // Inne domówka-core
-      { id: 'classic-domowka-057', word: 'BEER PONG', category: 'Gra' },
+      { id: 'classic-domowka-057', word: 'KALAMBURY', category: 'Gra' },
       { id: 'classic-domowka-058', word: 'KARTY', category: 'Gra' },
       { id: 'classic-domowka-059', word: 'PIŁKARZYKI', category: 'Gra' },
       { id: 'classic-domowka-060', word: 'SZOT', category: 'Napój' },
@@ -250,7 +250,7 @@ export const DOMOWKA = {
         topic: 'Domówka',
         words: [
           'wódka', 'pizza', 'głośnik', 'kanapa',
-          'chipsy', 'piwo', 'muzyka', 'beer-pong',
+          'chipsy', 'piwo', 'muzyka', 'kalambury',
           'papierosy', 'balkon', 'światło', 'kubek',
           'kac', 'taksówka', 'śmiech', 'ciemność',
         ],
@@ -341,7 +341,7 @@ export const DOMOWKA = {
         words: [
           'Giewont', 'oscypek', 'baca', 'owca',
           'Krupówki', 'ciupaga', 'Tatry', 'kolejka',
-          'Morskie Oko', 'deszcz', 'góral', 'koliba',
+          'Gubałówka', 'deszcz', 'góral', 'koliba',
           'parzenica', 'Zakopianka', 'górnik', 'scyzoryk',
         ],
       },

@@ -16,6 +16,14 @@ describe('content packs', () => {
     expect(words.filter((w, i) => words.indexOf(w) !== i)).toEqual([])
   })
 
+  it('use single-word secrets only (no spaces or hyphens)', () => {
+    const multi = [
+      ...getContentForMode('classic').map((c) => c.word),
+      ...getContentForMode('kameleon').flatMap((g) => g.words),
+    ].filter((w) => /[\s-]/.test(w.trim()))
+    expect(multi).toEqual([])
+  })
+
   it('give every Kameleon grid a unique topic and 16 distinct words', () => {
     const grids = getContentForMode('kameleon')
     expect(new Set(grids.map((g) => g.topic)).size).toBe(grids.length)
