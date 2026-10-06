@@ -22,7 +22,7 @@ const SECTIONS = [
   },
   {
     title: 'Głosowanie i punkty',
-    body: 'Głosowanie wskazuje jedną osobę: tę, którą wybierze więcej niż połowa cywili. Jeśli to impostor, odpada, a każdy cywil, który go wskazał, dostaje +1. Jeśli głosy się rozejdą albo wskażecie cywila, runda się kończy i każdy impostor, który się ukrył, dostaje +2. Gdy wszyscy od razu wiedzą, kim są impostorzy, stuknijcie „⚡ Wszyscy wiedzą?”: każdy wskazuje kilka osób w jednym podejściu i wpadają wszyscy impostorzy, na których zagłosowała ponad połowa cywili. Impostor zgadnie słowo: +3 dla impostorów. Nie trafi: +1 dla każdego cywila. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
+    body: 'Głosowanie wskazuje jedną osobę: tę, którą wybierze więcej niż połowa cywili. Jeśli to impostor, odpada, a każdy cywil, który go wskazał, dostaje +1. Jeśli głosy się rozejdą albo wskażecie cywila, runda się kończy i każdy impostor, który się ukrył, dostaje +2. Gdy wszyscy od razu wiedzą, kim są impostorzy, stuknijcie „⚡ Wszyscy wiedzą?”: bez podawania telefonu wskazujecie razem podejrzanych jednym stuknięciem i liczy się to jak głos każdego z Was (każdy cywil dostaje +1 za złapanego impostora). Jeśli nie traficie w żadnego impostora, runda się kończy. Impostor zgadnie słowo: +3 dla impostorów. Nie trafi: +1 dla każdego cywila. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
   },
 ]
 

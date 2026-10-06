@@ -12,14 +12,26 @@ import { useFocusHeading } from '../utils/useFocusHeading'
 // Single voter's voting screen. Shows every player except the voter themselves.
 // Single tap commits a vote, disables all buttons, and calls onVote(targetId).
 // Parent wraps this in a PrivacyHandoff loop so each voter votes privately.
-// Quick vote (maxPicks > 1): tap up to maxPicks names, then confirm; onVote
-// receives an array of ids.
-export default function VoteGrid({ players, voterId, voterName, onVote, accent, maxPicks = 1 }) {
+// Selection mode (maxPicks > 1 or requireConfirm): tap up to maxPicks names,
+// then confirm; onVote receives an array of ids. Used by the open vote.
+export default function VoteGrid({
+  players,
+  voterId,
+  voterName,
+  onVote,
+  accent,
+  maxPicks = 1,
+  requireConfirm = false,
+  instruction,
+  speech,
+  onBack,
+}) {
   const [voted, setVoted] = useState(false)
   const [picked, setPicked] = useState([])
-  const multi = maxPicks > 1
+  const multi = maxPicks > 1 || requireConfirm
   const headingRef = useFocusHeading()
-  useEffect(() => speak(voteEntryLine(), { delay: 300 }), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => speak(speech || voteEntryLine(), { delay: 300 }), [])
   useNudge(!voted, { after: 15000 })
   const candidates = players.filter((p) => p.id !== voterId)
   const cols = candidates.length <= 4 ? '1fr' : '1fr 1fr'
@@ -33,7 +45,9 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent, 
           ? cur.filter((id) => id !== targetId)
           : cur.length < maxPicks
             ? [...cur, targetId]
-            : cur
+            : maxPicks === 1
+              ? [targetId]
+              : cur
       )
       return
     }
@@ -104,7 +118,7 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent, 
           fontWeight: fontWeights.semibold,
         }}
       >
-        {multi ? `Szybkie głosowanie: stuknij do ${maxPicks} osób` : L.vote.instruction}
+        {instruction || L.vote.instruction}
       </p>
 
       <div
@@ -152,7 +166,13 @@ export default function VoteGrid({ players, voterId, voterName, onVote, accent, 
           onClick={confirmPicks}
           style={{ marginTop: spacing.lg }}
         >
-          Zatwierdź ({picked.length}/{maxPicks})
+          {maxPicks > 1 ? `Zatwierdź (${picked.length}/${maxPicks})` : 'Zatwierdź'}
+        </Button>
+      )}
+
+      {onBack && !voted && (
+        <Button variant="ghost" size="md" fullWidth onClick={onBack} style={{ marginTop: spacing.sm }}>
+          Wróć
         </Button>
       )}
 

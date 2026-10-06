@@ -69,8 +69,6 @@ export default function ModeClassic({
   const [turn, setTurn] = useState(1)
   const [voteIdx, setVoteIdx] = useState(0)
   const [votes, setVotes] = useState({})
-  // Quick vote: everyone names every impostor in one pass (obvious rounds).
-  const [quickVote, setQuickVote] = useState(false)
   const [guessText, setGuessText] = useState('')
   // Where "Wróć" goes if the table backs out of an impostor guess.
   const guessReturnRef = useRef('decision')
@@ -394,7 +392,6 @@ export default function ModeClassic({
             fullWidth
             onClick={() => {
               setLastCatchIds(null)
-              setQuickVote(false)
               setVoteIdx(0)
               setVotes({})
               setPhase('vote-handoff')
@@ -403,23 +400,20 @@ export default function ModeClassic({
             {caughtIds.length > 0 ? 'Głosujemy na następnego' : L.classic.callVote}
           </Button>
 
-          {hiddenCount > 1 && (
-            <Button
-              variant="secondary"
-              size="lg"
-              accentColor={accent}
-              fullWidth
-              onClick={() => {
-                setLastCatchIds(null)
-                setQuickVote(true)
-                setVoteIdx(0)
-                setVotes({})
-                setPhase('vote-handoff')
-              }}
-            >
-              ⚡ Wszyscy wiedzą? Głosuj na {hiddenCount} naraz
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            size="lg"
+            accentColor={accent}
+            fullWidth
+            onClick={() => {
+              setLastCatchIds(null)
+              setPhase('open-vote')
+            }}
+          >
+            {hiddenCount > 1
+              ? `⚡ Wszyscy wiedzą? Wskażcie ${hiddenCount} naraz`
+              : '⚡ Wszyscy wiedzą? Wskażcie od razu'}
+          </Button>
 
           {turn < MAX_TURNS && (
             <Button
@@ -459,16 +453,32 @@ export default function ModeClassic({
       <PrivacyHandoff
         playerName={currentVoter.name}
         step={`${voteIdx + 1} / ${voterSeats.length}`}
-        intro={
-          voteIdx === 0
-            ? quickVote
-              ? `Szybkie głosowanie! Każdy wskazuje do ${hiddenCount} osób naraz.`
-              : voteStartLine()
-            : undefined
-        }
+        intro={voteIdx === 0 ? voteStartLine() : undefined}
         onReady={() => setPhase('vote-entry')}
       />
     )
+  }
+
+  // After a vote: end the round, or (some impostors still hidden) go back to
+  // the decision screen.
+  const finishVote = (outcome) => {
+    const newlyCaught = caughtBy(outcome)
+    const nextCaught = [...caughtIds, ...newlyCaught]
+    setVoteLog((log) => [...log, outcome])
+    if (newlyCaught.length === 0) {
+      setEndReason('vote-failed')
+      setPhase('round-end')
+    } else if (nextCaught.length >= impostorIds.length) {
+      setCaughtIds(nextCaught)
+      setEndReason('all-caught')
+      setPhase('round-end')
+    } else {
+      playSound('correct')
+      setCaughtIds(nextCaught)
+      setLastCatchIds(newlyCaught)
+      setSpeakerIdx(0)
+      setPhase('decision')
+    }
   }
 
   if (phase === 'vote-entry') {
@@ -478,39 +488,49 @@ export default function ModeClassic({
         voterId={currentVoter.id}
         voterName={currentVoter.name}
         accent={accent}
-        maxPicks={quickVote ? hiddenCount : 1}
         onVote={(targetId) => {
           const nextVotes = { ...votes, [currentVoter.id]: targetId }
           setVotes(nextVotes)
           const nextIdx = voteIdx + 1
           if (nextIdx >= voterSeats.length) {
-            // Everyone voted: a normal vote exposes at most ONE impostor, a
-            // quick vote every impostor the civilians agree on.
-            const outcome = quickVote
-              ? resolveQuickVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
-              : resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount })
-            const newlyCaught = caughtBy(outcome)
-            const nextCaught = [...caughtIds, ...newlyCaught]
-            setVoteLog((log) => [...log, outcome])
-            if (newlyCaught.length === 0) {
-              setEndReason('vote-failed')
-              setPhase('round-end')
-            } else if (nextCaught.length >= impostorIds.length) {
-              setCaughtIds(nextCaught)
-              setEndReason('all-caught')
-              setPhase('round-end')
-            } else {
-              // Caught some, more are hidden: the table plays on or votes again.
-              playSound('correct')
-              setCaughtIds(nextCaught)
-              setLastCatchIds(newlyCaught)
-              setSpeakerIdx(0)
-              setPhase('decision')
-            }
+            // Everyone voted: this vote can expose at most ONE impostor.
+            finishVote(resolveVote({ votes: nextVotes, impostorIds, caughtIds, civilianCount }))
           } else {
             setVoteIdx(nextIdx)
             setPhase('vote-handoff')
           }
+        }}
+      />
+    )
+  }
+
+  // Open vote: the table already agrees, so nobody passes the phone. Everyone
+  // points at the same suspect(s) and one tap counts as every player's vote
+  // (nobody votes for themselves). Impostor votes never count anyway.
+  if (phase === 'open-vote') {
+    return (
+      <VoteGrid
+        players={activePlayers}
+        voterId={null}
+        voterName="Cały stół"
+        accent={accent}
+        maxPicks={hiddenCount}
+        requireConfirm
+        instruction={
+          hiddenCount > 1
+            ? `Wskażcie razem, kogo podejrzewacie (do ${hiddenCount} osób)`
+            : 'Wskażcie razem, kogo podejrzewacie'
+        }
+        speech="Wskażcie razem palcem. Raz, dwa, trzy!"
+        onBack={() => setPhase('decision')}
+        onVote={(picks) => {
+          const votes = {}
+          for (const id of voterSeats) {
+            const mine = picks.filter((t) => t !== id)
+            if (mine.length) votes[id] = mine
+          }
+          const outcome = resolveQuickVote({ votes, impostorIds, caughtIds, civilianCount })
+          finishVote({ ...outcome, open: true, picks })
         }}
       />
     )
@@ -669,12 +689,13 @@ export default function ModeClassic({
     const facts = voteLog.map((v, i) => {
       const label = voteLog.length > 1 ? `Głosowanie ${i + 1}: ` : ''
       const hits = v.hitVoterIds.length
-      if (v.quick) {
-        const got = v.caughtIds.map((id) => `${nameOf(id)} (${v.counts[id]} z ${civilianCount})`)
-        const wrong = v.wrongIds.length ? `; wskazano też: ${joinNames(v.wrongIds.map(nameOf))} — to nie impostor` : ''
-        if (got.length) return `${label}szybkie głosowanie, złapano: ${got.join(', ')}${wrong}`
-        if (v.wrongIds.length) return `${label}szybkie głosowanie: ${joinNames(v.wrongIds.map(nameOf))} — to nie impostor!`
-        return `${label}szybkie głosowanie: brak większości (trzeba było ${v.needed} z ${civilianCount} cywili)`
+      if (v.open) {
+        const got = v.caughtIds.map(nameOf)
+        const missed = v.picks.filter((id) => !v.caughtIds.includes(id)).map(nameOf)
+        const parts = []
+        if (got.length) parts.push(`złapano: ${joinNames(got)}`)
+        if (missed.length) parts.push(`${joinNames(missed)} — to nie impostor`)
+        return `${label}wspólne wskazanie, ${parts.join('; ')}${got.length ? '' : '!'}`
       }
       if (v.caughtId) return `${label}złapano: ${nameOf(v.caughtId)} (${hits} z ${civilianCount} cywili)`
       if (v.wrongAccusation) return `${label}wskazano: ${nameOf(v.accusedId)} — a to nie impostor!`
@@ -688,7 +709,7 @@ export default function ModeClassic({
     if (endReason === 'guess-wrong') facts.push('Cywile dostają po +1 pkt za zdemaskowanie')
 
     const lastVote = voteLog[voteLog.length - 1]
-    const voteRows = lastVote
+    const voteRows = lastVote && !lastVote.open
       ? Object.entries(lastVote.votes).map(([voterId, target]) => ({
           voter: nameOf(voterId),
           target: [].concat(target).map(nameOf).join(', '),
