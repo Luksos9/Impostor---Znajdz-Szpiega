@@ -251,6 +251,7 @@ export default function App() {
             roundIndex={game.currentRound}
             impostorCount={game.impostorCount}
             usedContentIds={game.usedContentIds}
+            recentImpostorIds={game.history?.[game.history.length - 1]?.impostorIds || []}
             isLastRound={isLastRound}
             onRoundComplete={finishRound}
             onQuit={quitToMenu}

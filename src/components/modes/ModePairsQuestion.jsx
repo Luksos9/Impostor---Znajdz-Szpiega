@@ -18,7 +18,7 @@ import {
   colorForMode,
   colorForModeShadow,
 } from '../../styles/theme'
-import { pickImpostor } from '../../utils/players'
+import { pickImpostors } from '../../utils/players'
 import { pickContent } from '../../utils/content'
 import {
 } from '../../utils/scoring'
@@ -28,9 +28,9 @@ const MODE_ID = 'pairsQuestion'
 
 // Kto ma inne pytanie?: write-and-reveal mode.
 // Flow: reveal question (private) → write answer (private) → reveal grid (public) → vote → result
-export default function ModePairsQuestion({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
+export default function ModePairsQuestion({ players, isLastRound, onRoundComplete, usedContentIds = [], recentImpostorIds = [] }) {
   // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
-  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [impostorId] = useState(() => pickImpostors(players, 1, recentImpostorIds)[0])
   const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
   const impostorIds = [impostorId]
 

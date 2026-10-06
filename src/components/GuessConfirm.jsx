@@ -8,9 +8,10 @@ import { useFocusHeading } from '../utils/useFocusHeading'
 // "Are you sure?" gate before an impostor guess. A guess ends the round, so a
 // mis-tap or a prank must be recoverable. Shown to the whole table, so it never
 // names anyone — the hand-off afterwards is anonymous too.
-export default function GuessConfirm({ eyebrow, who = 'impostor', accent, shadowColor, onConfirm, onBack }) {
+export default function GuessConfirm({ eyebrow, who = 'impostor', note, speech, accent, shadowColor, onConfirm, onBack }) {
   const headingRef = useFocusHeading()
-  useEffect(() => speak(guessConfirmLine()), [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => speak(speech || guessConfirmLine()), [])
 
   return (
     <div
@@ -65,7 +66,7 @@ export default function GuessConfirm({ eyebrow, who = 'impostor', accent, shadow
           fontWeight: fontWeights.semibold,
         }}
       >
-        Zgadywanie kończy rundę. Telefon powinien wziąć tylko {who}.
+        {note || 'Zgadywanie kończy rundę.'} Telefon powinien wziąć tylko {who}.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
         <Button
