@@ -341,6 +341,21 @@ export function catchLine(name, remaining) {
   )
 }
 
+// A wrong word guess while partners are still hidden: only the guesser is out.
+export function wrongGuessLine(name, remaining) {
+  const left =
+    remaining === 1
+      ? 'Został jeszcze jeden impostor.'
+      : `Zostało jeszcze ${remaining === 2 ? 'dwóch' : 'trzech'} impostorów.`
+  return fill(
+    pickLine(['Pudło, frajerze! {name} odpada. {left}', 'Gówno, nie to słowo. {name} wylatuje. {left}'], [
+      'Pudło! {name} zgaduje źle i odpada. {left}',
+      'Nie to słowo! {name} wypada z gry. {left}',
+    ]),
+    { name, left }
+  )
+}
+
 // On an impostor's card when there is more than one: who the partners are.
 export function partnersLine(names) {
   if (names.length === 0) return ''

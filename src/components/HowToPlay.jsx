@@ -10,7 +10,7 @@ const SECTIONS = [
   },
   {
     title: 'Klasyczny impostor',
-    body: 'Cywile dostają to samo słowo, impostor nie dostaje żadnego. Po kolei mówicie JEDNO słowo opisujące hasło: nie za oczywiste, żeby impostor go nie zgadł, i nie za dziwne, żeby cywile Wam uwierzyli. Potem głosujecie albo gracie kolejną turę (maksymalnie trzy). Impostor może w każdej chwili spróbować zgadnąć słowo — to kończy rundę. Gdy impostorów jest kilku, znają się nawzajem (widzą to na swojej karcie), a cywile łapią ich po jednym: po każdym złapanym możecie grać dalej albo głosować na następnego.',
+    body: 'Cywile dostają to samo słowo, impostor nie dostaje żadnego. Po kolei mówicie JEDNO słowo opisujące hasło: nie za oczywiste, żeby impostor go nie zgadł, i nie za dziwne, żeby cywile Wam uwierzyli. Potem głosujecie albo gracie kolejną turę (maksymalnie trzy). Impostor może w każdej chwili spróbować zgadnąć słowo. Trafi — runda się kończy. Pudło wyrzuca tylko tego, kto zgadywał: jeśli zostali inni impostorzy, gra toczy się dalej. Gdy impostorów jest kilku, znają się nawzajem (widzą to na swojej karcie), a cywile łapią ich po jednym: po każdym złapanym możecie grać dalej albo głosować na następnego.',
   },
   {
     title: 'Kameleon',
@@ -22,7 +22,7 @@ const SECTIONS = [
   },
   {
     title: 'Głosowanie i punkty',
-    body: 'Głosowanie wskazuje jedną osobę: tę, którą wybierze więcej niż połowa cywili. Jeśli to impostor, odpada, a każdy cywil, który go wskazał, dostaje +1. Jeśli głosy się rozejdą albo wskażecie cywila, runda się kończy i każdy impostor, który się ukrył, dostaje +2. Gdy wszyscy od razu wiedzą, kim są impostorzy, stuknijcie „⚡ Wszyscy wiedzą?”: bez podawania telefonu wskazujecie razem podejrzanych jednym stuknięciem i liczy się to jak głos każdego z Was (każdy cywil dostaje +1 za złapanego impostora). Jeśli nie traficie w żadnego impostora, runda się kończy. Impostor zgadnie słowo: +3 dla impostorów. Nie trafi: +1 dla każdego cywila. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
+    body: 'Głosowanie wskazuje jedną osobę: tę, którą wybierze więcej niż połowa cywili. Jeśli to impostor, odpada, a każdy cywil, który go wskazał, dostaje +1. Jeśli głosy się rozejdą albo wskażecie cywila, runda się kończy i każdy impostor, który się ukrył, dostaje +2. Gdy wszyscy od razu wiedzą, kim są impostorzy, stuknijcie „⚡ Wszyscy wiedzą?”: bez podawania telefonu wskazujecie razem podejrzanych jednym stuknięciem i liczy się to jak głos każdego z Was (każdy cywil dostaje +1 za złapanego impostora). Jeśli nie traficie w żadnego impostora, runda się kończy. Impostor zgadnie słowo: +3 dla każdego impostora, który jest jeszcze w grze. Nie trafi: +1 dla każdego cywila, a strzelający odpada. Po ostatniej rundzie wygrywa ten, kto ma najwięcej punktów.',
   },
 ]
 

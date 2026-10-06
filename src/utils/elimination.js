@@ -79,12 +79,20 @@ export function resolveQuickVote({ votes, impostorIds, caughtIds = [], civilianC
   }
 }
 
+// A wrong word guess knocks out only the impostor who guessed; partners still
+// hidden stay in the game. Every civilian gets +1 for it (see scoreRound).
+export function wrongGuessEntry(guesserId, guess) {
+  return { wrongGuess: true, guesserId, guess, caughtId: guesserId, caughtIds: [guesserId], hitVoterIds: [] }
+}
+
 // Every impostor caught by a log entry (a quick vote can catch several).
 export const caughtBy = (v) => v.caughtIds || (v.caughtId ? [v.caughtId] : [])
 
 // Final scoring for the round.
 //   voteLog: results of resolveVote, in order
 //   reason:  'all-caught' | 'vote-failed' | 'guess-right' | 'guess-wrong'
+//   (a wrong guess is a voteLog entry from wrongGuessEntry; 'guess-wrong' just
+//   means the last hidden impostor guessed wrong)
 export function scoreRound({ players, impostorIds, voteLog, reason }) {
   const deltas = Object.fromEntries(players.map((p) => [p.id, 0]))
   const caughtIds = voteLog.flatMap(caughtBy)
@@ -92,10 +100,10 @@ export function scoreRound({ players, impostorIds, voteLog, reason }) {
   const civilianIds = players.map((p) => p.id).filter((id) => !impostorIds.includes(id))
 
   for (const v of voteLog) for (const id of v.hitVoterIds) deltas[id] += 1
+  for (const v of voteLog) if (v.wrongGuess) for (const id of civilianIds) deltas[id] += 1
 
   if (reason === 'vote-failed') for (const id of hiddenIds) deltas[id] += 2
   if (reason === 'guess-right') for (const id of hiddenIds) deltas[id] += 3
-  if (reason === 'guess-wrong') for (const id of civilianIds) deltas[id] += 1
 
   const impostorsScored = reason === 'vote-failed' || reason === 'guess-right'
   const winner = !impostorsScored ? 'civilians' : caughtIds.length > 0 ? 'mixed' : 'impostors'

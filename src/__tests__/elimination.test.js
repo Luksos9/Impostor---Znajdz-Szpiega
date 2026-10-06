@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { caughtBy, resolveQuickVote, resolveVote, scoreRound } from '../utils/elimination'
+import { caughtBy, resolveQuickVote, resolveVote, scoreRound, wrongGuessEntry } from '../utils/elimination'
 
 // 6 players: a and b are impostors; c, d, e, f are civilians (majority = 3).
 const players = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => ({ id, name: id.toUpperCase() }))
@@ -79,10 +79,23 @@ describe('scoreRound', () => {
     expect(r.winner).toBe('mixed')
   })
 
-  it('wrong guess: every civilian gets +1', () => {
-    const r = scoreRound({ players, impostorIds, voteLog: [], reason: 'guess-wrong' })
+  it('wrong guess by the last impostor: every civilian gets +1', () => {
+    const r = scoreRound({ players, impostorIds: ['a'], voteLog: [wrongGuessEntry('a', 'KOT')], reason: 'guess-wrong' })
     expect(r.winner).toBe('civilians')
-    expect(r.deltas).toEqual({ a: 0, b: 0, c: 1, d: 1, e: 1, f: 1 })
+    expect(r.deltas).toEqual({ a: 0, b: 1, c: 1, d: 1, e: 1, f: 1 })
+  })
+
+  it('wrong guess knocks out only the guesser; the partner can still win', () => {
+    const out = wrongGuessEntry('a', 'KOT')
+    expect(caughtBy(out)).toEqual(['a'])
+    // b survives the next vote: b scores, a does not.
+    const r = scoreRound({ players, impostorIds, voteLog: [out, miss], reason: 'vote-failed' })
+    expect(r.hiddenIds).toEqual(['b'])
+    expect(r.deltas).toEqual({ a: 0, b: 2, c: 1, d: 1, e: 1, f: 1 })
+    expect(r.winner).toBe('mixed')
+    // ...or b guesses the word: b gets +3.
+    const g = scoreRound({ players, impostorIds, voteLog: [out], reason: 'guess-right' })
+    expect(g.deltas).toMatchObject({ a: 0, b: 3 })
   })
 })
 
