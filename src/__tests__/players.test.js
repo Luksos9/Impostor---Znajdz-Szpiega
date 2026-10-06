@@ -18,6 +18,34 @@ describe('maxImpostors', () => {
   })
 })
 
+describe('pickImpostors rotation', () => {
+  const ten = make(10)
+  const ids = ten.map((p) => p.id)
+  it('last round impostor is picked again only ~5% of the time', () => {
+    const N = 20000
+    let again = 0
+    for (let i = 0; i < N; i++) if (pickImpostors(ten, 1, [ids[0]])[0] === ids[0]) again++
+    expect(again / N).toBeGreaterThan(0.03)
+    expect(again / N).toBeLessThan(0.07)
+  })
+  it('never zero, and everyone else stays equally likely', () => {
+    const N = 20000
+    const counts = Object.fromEntries(ids.map((id) => [id, 0]))
+    for (let i = 0; i < N; i++) counts[pickImpostors(ten, 1, [ids[0]])[0]]++
+    expect(counts[ids[0]]).toBeGreaterThan(0)
+    for (const id of ids.slice(1)) expect(counts[id] / N).toBeGreaterThan(0.09)
+  })
+  it('works with several impostors and tiny groups', () => {
+    const picks = pickImpostors(ten, 4, ids.slice(0, 4))
+    expect(new Set(picks).size).toBe(4)
+    const three = make(3)
+    // 3 players, 1 impostor: still always returns someone valid.
+    expect(three.map((p) => p.id)).toContain(pickImpostors(three, 1, [three[0].id])[0])
+    // 4 impostors last round among 5 players still yields a full set.
+    expect(new Set(pickImpostors(make(5), 2, make(5).slice(0, 4).map((p) => p.id))).size).toBe(2)
+  })
+})
+
 describe('pickImpostors', () => {
   it('returns distinct players and clamps to what the lobby allows', () => {
     const picks = pickImpostors(make(6), 9)

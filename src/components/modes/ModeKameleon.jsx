@@ -17,7 +17,7 @@ import {
   colorForMode,
   colorForModeShadow,
 } from '../../styles/theme'
-import { pickImpostor, makeSpeakerOrder } from '../../utils/players'
+import { pickImpostors, makeSpeakerOrder } from '../../utils/players'
 import GuessConfirm from '../GuessConfirm'
 import { buildVoteSummary } from '../../utils/roundSummary'
 import { roundHeadline } from '../../utils/narration'
@@ -33,9 +33,9 @@ const MODE_ID = 'kameleon'
 
 // Kameleon: Chameleon-style grid mode.
 // Flow: public grid → secret reveal (private) → describe turns → decision → vote or grid guess → result
-export default function ModeKameleon({ players, isLastRound, onRoundComplete, usedContentIds = [] }) {
+export default function ModeKameleon({ players, isLastRound, onRoundComplete, usedContentIds = [], recentImpostorIds = [] }) {
   // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
-  const [impostorId] = useState(() => pickImpostor(players).id)
+  const [impostorId] = useState(() => pickImpostors(players, 1, recentImpostorIds)[0])
   const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
   // The secret is one random word from the public grid.
   const [secret] = useState(() => {

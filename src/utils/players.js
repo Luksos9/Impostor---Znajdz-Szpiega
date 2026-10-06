@@ -81,13 +81,23 @@ export function pickImpostor(players) {
   return players[idx]
 }
 
+// Chance that someone who was an impostor last round is one again. Low so the
+// role goes round the table, but never zero, so nobody is ever "safe".
+export const IMPOSTOR_REPEAT_CHANCE = 0.05
+
 // Pick `count` distinct impostors (clamped to what the lobby allows).
-export function pickImpostors(players, count = 1) {
+// `recentIds` are last round's impostors: each gets the role again only with
+// `repeatChance`; everyone else is drawn first. If there are not enough fresh
+// players (tiny groups), recent ones fill the remaining slots.
+export function pickImpostors(players, count = 1, recentIds = [], repeatChance = IMPOSTOR_REPEAT_CHANCE) {
   if (!players || players.length === 0) return []
   const n = Math.max(1, Math.min(count, maxImpostors(players.length)))
-  return shuffle(players)
-    .slice(0, n)
-    .map((p) => p.id)
+  const recent = new Set(recentIds)
+  const again = shuffle(players.filter((p) => recent.has(p.id)))
+  const lucky = again.filter(() => Math.random() < repeatChance)
+  const rest = again.filter((p) => !lucky.includes(p))
+  const fresh = shuffle(players.filter((p) => !recent.has(p.id)))
+  return [...lucky, ...fresh, ...rest].slice(0, n).map((p) => p.id)
 }
 
 // Speaking / reveal order. An impostor goes first only ~5% of the time;

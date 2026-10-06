@@ -57,9 +57,10 @@ export default function ModeClassic({
   onRoundComplete,
   impostorCount = 1,
   usedContentIds = [],
+  recentImpostorIds = [],
 }) {
   // Lazy useState initialisers: chosen once per mounted round, never re-rolled.
-  const [impostorIds] = useState(() => pickImpostors(players, impostorCount))
+  const [impostorIds] = useState(() => pickImpostors(players, impostorCount, recentImpostorIds))
   // usedContentIds keeps words from repeating within one game.
   const [content] = useState(() => pickContent(MODE_ID, usedContentIds).item)
   // Impostors only rarely (~5%) get to speak first.
